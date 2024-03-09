@@ -1,0 +1,8 @@
+# Ignore temporary files
+*.log
+*.pot
+*.pyc
+
+# Ignore IDE settings
+.idea/
+.vscode/
