@@ -1,0 +1,18 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>time tracker</title>
+    <!-- custom css -->
+    <link href="{% static 'main_app/css/style.css' %}" rel="stylesheet"/>
+</head>
+<body>
+
+{% block content %}{% endblock content %}
+
+<!-- main js-->
+<script src="{% static 'main_app/js/main.js' %}"></script>
+</body>
+</html>
