@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>hi</h1>
+<div class="container">
+    <form id="taskForm" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="button" onclick="addTask()"><i class="fa-regular fa-circle-play"></i></button>
+    </form>
+
+    <div id="taskList">
+        {% for task in user_tasklist %}
+        <hr>
+        <div class="task" id="task{{ forloop.counter }}">
+            <span class="taskName" onclick="toggleTimer({{ forloop.counter }})">{{ task }}</span>
+            <div class="timer" id="timer{{ forloop.counter }}">00:00</div>
+        </div>
+        {% endfor %}
+    </div>
+    <hr>
+</div>
 {% endblock content %}
