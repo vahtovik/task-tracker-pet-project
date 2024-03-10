@@ -79,6 +79,8 @@ function toggleTimer(taskId) {
       hrElement.parentNode.removeChild(hrElement); // Удаляем предыдущий hr
     }
     timerStatus[taskId] = false;
+    let taskName = document.getElementById("taskName" + taskId);
+    taskName.style.cursor = "auto";
   } else {
     if (timerStatus[taskId] !== false) {
       startTimer(taskId);

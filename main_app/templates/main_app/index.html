@@ -12,7 +12,9 @@
         {% for task in user_tasklist %}
         <hr>
         <div class="task" id="task{{ forloop.counter }}">
-            <span class="taskName" onclick="toggleTimer({{ forloop.counter }})">{{ task }}</span>
+            <span id="taskName{{ forloop.counter }}" class="taskName" onclick="toggleTimer({{ forloop.counter }})">
+                {{ task }}
+            </span>
             <div class="timer" id="timer{{ forloop.counter }}">00:00</div>
         </div>
         {% endfor %}
