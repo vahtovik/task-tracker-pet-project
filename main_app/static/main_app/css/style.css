@@ -1,3 +1,74 @@
 * {
-    background-color: brown;
+  font-family: sans-serif;
+}
+
+hr {
+  border-color: #656565;
+}
+
+body {
+  box-sizing: border-box;
+  background: rgb(0, 0, 0);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+}
+
+.container {
+  background: rgb(0, 0, 0);
+  padding: 30px;
+  width: 600px;
+  border-radius: 10px;
+}
+
+form {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+input {
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  background: rgb(43, 43, 43);
+  padding: 6px;
+  font-size: 20px;
+  width: 540px;
+  color: #fff;
+}
+
+button {
+  border: none;
+  color: rgb(100, 100, 100);
+  background: transparent;
+  transition: all .1s ease-in-out;
+}
+
+button:hover {
+  border: none;
+  color: rgb(174, 174, 174);
+}
+
+.fa-regular {
+  font-size: 28px;
+}
+
+.taskList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  color: #e3e3e3;
+  font-size: 18px;
+}
+
+.timer {
+  color: rgb(100, 100, 252);
 }
