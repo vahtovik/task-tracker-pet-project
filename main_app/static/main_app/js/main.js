@@ -41,6 +41,7 @@ function addTask() {
       taskDiv.id = "task" + taskId;
 
       let taskNameSpan = document.createElement("span");
+      taskNameSpan.id = "taskName" + taskId;
       taskNameSpan.className = "taskName";
       taskNameSpan.textContent = taskName;
       taskNameSpan.onclick = function () { toggleTimer(taskId) };
