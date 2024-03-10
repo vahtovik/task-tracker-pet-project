@@ -61,6 +61,9 @@ function addTask() {
     .catch(error => {
       console.error('Произошла ошибка:', error);
     });
+
+    form.querySelector("#id_task").value = "";
+    
 }
 
 function toggleTimer(taskId) {
