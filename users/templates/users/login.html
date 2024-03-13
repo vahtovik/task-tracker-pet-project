@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="main">
+    <div class="container">
+        <div class="auth">
+            <form method="post" class="auth__form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" name="username" class="input auth__input" placeholder="Введите логин">
+                    <p class="auth__error">{{ form.username.errors }}</p>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" class="input auth__input" placeholder="Введите пароль">
+                    <p class="auth__error">{{ form.password.errors }}</p>
+                </div>
+                <button class="btn btn-white" type="submit">Войти</button>
+                <a class="btn btn-white" href="{% url 'users:register' %}">Регистрация</a>
+            </form>
+        </div>
+    </div>
+</main>
+<footer></footer>
+{% endblock content %}

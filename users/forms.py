@@ -4,27 +4,23 @@ from django.contrib.auth.forms import UserCreationForm
 
 
 class RegisterUserForm(UserCreationForm):
-    username = forms.CharField(label='Логин', widget=forms.TextInput())
-    password1 = forms.CharField(label='Пароль', widget=forms.PasswordInput())
-    password2 = forms.CharField(label='Повторите пароль', widget=forms.PasswordInput())
+    username = forms.CharField(label='', widget=forms.TextInput(
+        attrs={'class': 'input auth__input', 'placeholder': 'Введите логин'}))
+    password1 = forms.CharField(label='', widget=forms.PasswordInput(
+        attrs={'class': 'input auth__input', 'placeholder': 'Введите пароль'}))
+    password2 = forms.CharField(label='', widget=forms.PasswordInput(
+        attrs={'class': 'input auth__input', 'placeholder': 'Повторите пароль'}))
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'email', 'password1', 'password2')
-        labels = {
-            'email': 'E-mail',
-        }
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if get_user_model().objects.filter(email=email).exists():
-            raise forms.ValidationError('Пользователь с таким E-mail уже существует!')
-        return email
+        fields = ('username', 'password1', 'password2')
 
 
 class LoginUserForm(forms.Form):
-    username = forms.CharField(label='Логин', widget=forms.TextInput())
-    password = forms.CharField(label='Пароль', widget=forms.PasswordInput())
+    username = forms.CharField(label='', widget=forms.TextInput(
+        attrs={'class': 'input auth__input', 'placeholder': 'Введите логин'}), required=False)
+    password = forms.CharField(label='', widget=forms.PasswordInput(
+        attrs={'class': 'input auth__input', 'placeholder': 'Введите пароль'}), required=False)
 
     class Meta:
         model = get_user_model()

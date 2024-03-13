@@ -6,15 +6,23 @@ from .models import TaskList
 class TaskListForm(forms.ModelForm):
     class Meta:
         model = TaskList
-        fields = ('task',)
+        fields = ('task_name',)
         labels = {
-            'task': ''
+            'task_name': ''
         }
 
-    def save(self, commit=True):
-        instance = super(TaskListForm, self).save(commit=False)
-        if 'session_key' in self.initial:
-            instance.session_key = self.initial['session_key']
-        if commit:
-            instance.save()
-        return instance
+
+class GetPendingTaskForm(forms.Form):
+    task_name = forms.CharField(max_length=255)
+
+
+class EditCompletedTaskForm(forms.Form):
+    task_name = forms.CharField(max_length=255)
+    task_start_time = forms.DateTimeField()
+    task_current_time = forms.DateTimeField()
+
+
+class AddCompletedTaskForm(forms.Form):
+    task_name = forms.CharField(max_length=255)
+    task_start_time = forms.DateTimeField()
+    task_current_time = forms.DateTimeField()

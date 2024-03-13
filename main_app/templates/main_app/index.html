@@ -1,24 +1,298 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
-<div class="container">
-    <form id="taskForm" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="button" onclick="addTask()"><i class="fa-regular fa-circle-play"></i></button>
-    </form>
-
-    <div id="taskList">
-        {% for task in user_tasklist %}
-        <hr>
-        <div class="task" id="task{{ forloop.counter }}">
-            <span id="taskName{{ forloop.counter }}" class="taskName" onclick="toggleTimer({{ forloop.counter }})">
-                {{ task }}
-            </span>
-            <div class="timer" id="timer{{ forloop.counter }}">00:00</div>
+<main class="main">
+    <div class="container">
+        <div class="tasks">
+            <div class="tasks__form">
+                <form action="#" method="POST" id="tasks__form" name="task_name">
+                    {% csrf_token %}
+                    <input type="text" class="input">
+                    <i class="_icon-plus plus-icon" onclick="addPendingTask()"></i>
+                    <i href="#warning-popup" class="_icon-play warning-popup" onclick="addActiveTask()"></i>
+                </form>
+            </div>
+            <div class="tasks__block active__tasks">
+                <ul class="tasks__block__list sortable__list" id="upper__tasks__block__list">
+                    {% if active_task %}
+                    <li class="tasks__block__list__item list__item active__task">
+                        <a href="#" class="list__item__link" data-item-id="{{ active_task.pk }}">
+                            <div class="list__item__title">
+                                {{ active_task }}
+                            </div>
+                            <div class="list__item__strend">
+                                {{ active_task.task_current_time|date:"H:i" }} - {{ time_now }}
+                            </div>
+                            <div class="list__item__sepndtime">
+                                <p>{{ formatted_time_difference }}</p>
+                                <i class="_icon-stop-circle" onclick="finishActiveTask()"></i>
+                            </div>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for task in pending_tasks %}
+                    <li class="tasks__block__list__item list__item waiting-task">
+                        <a href="#edit-task-popup" class="list__item__link popup-link" data-item-id="{{ task.pk }}">
+                            <div class="list__item__title">{{ task }}</div>
+                            <div class="list__item__run">
+                                <i class="_icon-play"></i>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="tasks__block">
+                <div class="tasks__block__info">
+                    <div class="tasks__block__info__title">
+                        <h2>Сегодня</h2>
+                        <a href="#add-completed-task-popup" class="popup-link">
+                            <i class="_icon-plus"></i>
+                        </a>
+                    </div>
+                    <div class="tasks__block__info__time">
+                        {% if total_time != "0 м" %}
+                        {{ total_time }}
+                        {% endif %}
+                    </div>
+                </div>
+                <ul class="tasks__block__list" id="today__tasks__block__list">
+                    {% for task in completed_tasks_with_time %}
+                    <li class="tasks__block__list__item list__item done with__time">
+                        <a href="#edit-completed-task-popup" class="list__item__link popup-link"
+                           data-item-id="{{ task.pk }}">
+                            <div class="list__item__title">{{ task }}</div>
+                            <div class="list__item__strend">
+                                {{ task.task_current_time|date:"H:i" }} -
+                                {{ task.completed_task_end_time|date:"H:i" }}
+                            </div>
+                            <div class="list__item__sepndtime">
+                                {{ task.task_time_interval|format_time_interval }}
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                    {% for task in completed_tasks_no_time %}
+                    <li class="tasks__block__list__item list__item done">
+                        <a href="#edit-completed-task-popup" class="list__item__link popup-link"
+                           data-item-id="{{ task.pk }}">
+                            <div class="list__item__title">{{ task }}</div>
+                            <div class="list__item__strend"></div>
+                            <div class="list__item__sepndtime"></div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="tasks__block">
+                <div class="tasks__block__info">
+                    <div class="tasks__block__info__title">
+                        <h2>1 марта, пт</h2>
+                    </div>
+                    <div class="tasks__block__info__time">2 ч 45 м</div>
+                </div>
+                <ul class="tasks__block__list disable-hover">
+                    <li class="tasks__block__list__item list__item done">
+                        <a href="#" class="list__item__link">
+                            <div class="list__item__title">Текст для выполняемой задачи</div>
+                            <div class="list__item__strend">6:50 - 7:05</div>
+                            <div class="list__item__sepndtime">15:47</div>
+                        </a>
+                    </li>
+                    <li class="tasks__block__list__item list__item done">
+                        <a href="#" class="list__item__link">
+                            <div class="list__item__title">Текст для выполняемой задачи</div>
+                            <div class="list__item__strend"></div>
+                            <div class="list__item__sepndtime"></div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        {% endfor %}
     </div>
-    <hr>
-</div>
+</main>
 {% endblock content %}
+
+{% block footer %}
+<footer class="footer">
+    <div class="container">
+        <ul class="footer__options">
+            <li class="footer__options__item download-more">
+                <a href="#">
+                    <i class="_icon-download"></i>
+                    <p>Загрузить ещё</p>
+                </a>
+            </li>
+            <li class="footer__options__item today-only">
+                <a href="#">
+                    <i class="_icon-calendar"></i>
+                    <p>Только сегодня</p>
+                </a>
+            </li>
+            <li class="footer__options__item">
+                <a href="#profile-edit-popup" class="popup-link">
+                    <i class="_icon-user"></i>
+                    {% if user.is_authenticated %}
+                    <p>{{ user.username }}</p>
+                    {% else %}
+                    <i class="_icon-user"></i>
+                    <p><a href="{% url 'users:login' %}">Войти</a></p>
+                    {% endif %}
+                </a>
+            </li>
+        </ul>
+    </div>
+</footer>
+{% endblock footer %}
+
+{% block popups %}
+<div class="popup" id="less-than-minute-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Задачи длительностью менее 1 минуты не сохраняются</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="warning-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Сначала завершите текущую задачу</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="edit-task-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Редактирование задачи</h3>
+            </div>
+            <form method="POST" class="popup__form" id="edit__pending__popup__form">
+                {% csrf_token %}
+                <input type="hidden" name="taskId" value="">
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input" name="task_name">
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="saveEditableTask()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                    <button type="button" class="btn btn-black" onclick="deleteEditableTask()">
+                        <i class="_icon-trash"></i>Удалить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="edit-completed-task-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Редактирование выполненной задачи</h3>
+            </div>
+            <form method="post" class="popup__form" id="edit__completed__task__popup__form">
+                {% csrf_token %}
+                <input type="hidden" name="taskId" value="">
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input task__name">
+                </div>
+                <div class="popup__content-item popup__form-range">
+                    <div class="popup__form-range__inputs">
+                        <input type="text" class="input task__start" name="task__start">
+                        <span>-</span>
+                        <input type="text" class="input task__end" name="task__end">
+                    </div>
+                    <div class="popup__form-range__time"></div>
+                </div>
+                <div class="popup__content-item popup__form-day">
+                    <i class="_icon-calendar-date"></i>
+                    <p>{{ month_day }} {{ month }}</p>
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="editCompletedTask()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                    <button type="button" class="btn btn-black" onclick="deleteCompletedTask()">
+                        <i class="_icon-trash"></i>Удалить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="add-completed-task-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Добавление выполненной задачи</h3>
+            </div>
+            <form method="post" class="popup__form" id="add__completed__task__popup__form">
+                {% csrf_token %}
+                <input type="hidden" name="taskId" value="">
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input task__name" name="task_name">
+                </div>
+                <div class="popup__content-item popup__form-range">
+                    <div class="popup__form-range__inputs">
+                        <input type="text" class="input task__start" name="task__start">
+                        <span>-</span>
+                        <input type="text" class="input task__end" name="task__end">
+                    </div>
+                    <div class="popup__form-range__time"></div>
+                </div>
+                <div class="popup__content-item popup__form-day">
+                    <i class="_icon-calendar-date"></i>
+                    <p>{{ month_day }} {{ month }}</p>
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="addCompletedTask()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="profile-edit-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Редактирование профиля</h3>
+            </div>
+            <form method="post" class="popup__form" id="edit__credentials__popup__form">
+                {% csrf_token %}
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input login">
+                </div>
+                <div class="popup__content-item popup__form-input">
+                    <input type="password" class="input password">
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="editCredentials()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                    <a href="{% url 'users:logout' %}" class="btn btn-black">
+                        <i class="_icon-log-out"></i>Выйти
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock popups %}
