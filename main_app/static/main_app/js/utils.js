@@ -18,6 +18,7 @@ addEventListener('DOMContentLoaded', () => {
                     const itemId = this.getAttribute('data-item-id');
                     const hiddenInput = currPopup.querySelector("[name='taskId']");
                     hiddenInput.value = itemId;
+                    hiddenInput.dispatchEvent(new Event('change'));
                 }
 
                 popupOpen(currPopup)
@@ -55,8 +56,9 @@ addEventListener('DOMContentLoaded', () => {
 
     function popupClose(popupActive, doUnlock = true) {
         popupActive.classList.remove('open')
-        // const hiddenInput = popupActive.querySelector("[name='taskId']")
-        // hiddenInput.value = ""
+        const hiddenInput = popupActive.querySelector("[name='taskId']")
+        hiddenInput.value = ""
+        hiddenInput.dispatchEvent(new Event('change'))
         const inputs = popupActive.querySelectorAll("input");
         if (inputs.length) {
             for (let i = 0; i < inputs.length; i++) {
@@ -283,7 +285,7 @@ addEventListener('DOMContentLoaded', () => {
         function formatTimeDifference(timeDifference) {
             const hours = Math.floor(timeDifference / 60);
             const minutes = timeDifference % 60;
-            
+
             if ((minutes + hours * 60) < 60) {
                 return `${minutes} м`;
             }
@@ -324,6 +326,58 @@ addEventListener('DOMContentLoaded', () => {
     //calculateTimeDifference();
 
     /* INPUT VALIDATION SECTION ENDS */
+
+    /* PUT ALL OF THE DATA TO POPUP STARTS */
+    const hiddenInputs = document.querySelectorAll("[name='taskId']")
+    function getPopupData(e) {
+        const taskId = e.target.value
+        const popup = this.closest('.popup')
+        const popupInputTaskName = popup.querySelector('.task__name')
+        const popupInputTaskStart = popup.querySelector("[name='task__start']")
+        const popupInputTaskEnd = popup.querySelector("[name='task__end']")
+        const popupDay = popup.querySelector('.popup__form-day p')
+
+        /* VSE LI POPUPS S TAKIM CLASSOM ??????? KAJETSYA DA */
+        const allLinks = document.querySelectorAll('.popup-link')
+        let targetLink
+        for (const link of allLinks) {
+            if (link.hasAttribute('data-item-id') && link.getAttribute('data-item-id') == taskId) {
+                targetLink = link
+            }
+        }
+
+        if (!targetLink) {
+            console.log("hidden value was change not by pressing on a.popup-link. It is impossible!")
+            return
+        }
+
+        const targetLinkTaskName = targetLink.querySelector('.list__item__title')
+        const targetLinkStrend = targetLink.querySelector('.list__item__strend')
+        const targetLinkStr = targetLinkStrend ? targetLinkStrend.textContent ? targetLinkStrend.textContent.split('-')[0].trim() : 0 : 0
+        const targetLinkEnd = targetLinkStrend ? targetLinkStrend.textContent ? targetLinkStrend.textContent.split('-')[1].trim() : 0 : 0
+        // const infoTitle = targetLink.closest('.tasks__block__list').previousElementSibling ? targetLink.closest('.tasks__block__list').previousElementSibling.querySelector('.tasks__block__info__title h2') : 0
+        console.log("111111");
+
+        if (popupInputTaskName && targetLinkTaskName) {
+            popupInputTaskName.value = targetLinkTaskName.textContent
+        }
+
+        if (popupInputTaskStart && targetLinkStrend && targetLinkStrend.textContent !== "") {
+            popupInputTaskStart.value = targetLinkStr
+        }
+
+        if (popupInputTaskEnd && targetLinkStrend && targetLinkStrend.textContent !== "") {
+            popupInputTaskEnd.value = targetLinkEnd
+        }
+
+        // if (infoTitle && popupDay) {
+        //     popupDay.textContent = infoTitle.textContent.toLocaleLowerCase().trim()
+        // }
+    }
+    for (const hiddenInput of hiddenInputs) {
+        hiddenInput.addEventListener('change', getPopupData)
+    }
+    /* PUT ALL OF THE DATA TO POPUP ENDS */
 
 })
 
@@ -368,6 +422,7 @@ function bindTaskWithPopup(e) {
         const itemId = this.getAttribute('data-item-id');
         const hiddenInput = currPopup.querySelector("[name='taskId']")
         hiddenInput.value = itemId
+        hiddenInput.dispatchEvent(new Event('change'));
     }
     popupOpen(currPopup)
 }
@@ -478,4 +533,32 @@ function sortAndGetTotalTime() {
             }
         }
     });
+}
+
+function makePopupOpen() {
+    const popupLinks = document.querySelectorAll('.popup-link')
+    const body = document.querySelector('body')
+
+    let unlock = 800
+
+    if (popupLinks.length > 0) {
+        for (let index = 0; index < popupLinks.length; index++) {
+            const popupLink = popupLinks[index]
+            popupLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const popupName = popupLink.getAttribute('href').replace('#', '');
+                const currPopup = document.getElementById(popupName);
+
+                if (this.hasAttribute('data-item-id')) {
+                    const itemId = this.getAttribute('data-item-id');
+                    const hiddenInput = currPopup.querySelector("[name='taskId']");
+                    hiddenInput.value = itemId;
+                    hiddenInput.dispatchEvent(new Event('change'));
+                }
+
+                popupOpen(currPopup)
+            })
+        }
+    }
 }

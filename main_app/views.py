@@ -318,31 +318,33 @@ def load_next_completed_tasks(request):
     date_to_decode = json.loads(body_unicode).get('date')
     date = datetime.fromisoformat(date_to_decode.replace('Z', '+00:00'))
     user = request.user
-    next_smallest_date = TaskList.objects.filter(
-        completed_task_start_time__lt=date,
-        user=user,
-    ).aggregate(next_smallest_date=Max('completed_task_start_time__lt'))
 
-    next_smallest_date = next_smallest_date.get('next_smallest_date', None)
-
-    if next_smallest_date:
-        next_smallest_date = next_smallest_date.date()  # Если вам нужна только дата без времени
-
-        # Определяем начало и конец дня для next_smallest_date
-        start_of_day = datetime.combine(next_smallest_date, datetime.min.time())
-        end_of_day = start_of_day + timedelta(days=1)  # Следующий день
-
-        # Запрос для получения записей за один день
-        tasks_in_day = TaskList.objects.filter(
-            task_start_time__range=(start_of_day, end_of_day),
-            user=request.user
-        )
-
-        # теперь у вас есть записи tasks_in_day, содержащие все задачи,
-        # выполненные в тот же день, что и next_smallest_date
-    else:
-        # Обработка случая, когда next_smallest_date не был найден
-        pass
-
-
-    return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+    # next_smallest_date = TaskList.objects.filter(
+    #     completed_task_start_time__lt=date,
+    #     user=user,
+    # ).aggregate(next_smallest_date=Max('completed_task_start_time__lt'))
+    #
+    # next_smallest_date = next_smallest_date.get('next_smallest_date', None)
+    #
+    # if next_smallest_date:
+    #     next_smallest_date = next_smallest_date.date()  # Если вам нужна только дата без времени
+    #
+    #     # Определяем начало и конец дня для next_smallest_date
+    #     start_of_day = datetime.combine(next_smallest_date, datetime.min.time())
+    #     end_of_day = start_of_day + timedelta(days=1)  # Следующий день
+    #
+    #     # Запрос для получения записей за один день
+    #     tasks_in_day = TaskList.objects.filter(
+    #         task_start_time__range=(start_of_day, end_of_day),
+    #         user=request.user
+    #     )
+    #
+    #     # теперь у вас есть записи tasks_in_day, содержащие все задачи,
+    #     # выполненные в тот же день, что и next_smallest_date
+    # else:
+    #     # Обработка случая, когда next_smallest_date не был найден
+    #     pass
+    #
+    #
+    # return JsonResponse({'success': True})

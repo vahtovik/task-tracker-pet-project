@@ -164,6 +164,7 @@ function finishActiveTask() {
           const itemId = this.getAttribute('data-item-id');
           const hiddenInput = currPopup.querySelector("[name='taskId']");
           hiddenInput.value = itemId;
+          hiddenInput.dispatchEvent(new Event('change'));
         }
 
         popupOpen(currPopup)
@@ -437,6 +438,7 @@ function addCompletedTask() {
             const itemId = this.getAttribute('data-item-id');
             const hiddenInput = currPopup.querySelector("[name='taskId']");
             hiddenInput.value = itemId;
+            hiddenInput.dispatchEvent(new Event('change'));
           }
 
           popupOpen(currPopup)
@@ -466,6 +468,7 @@ function addCompletedTask() {
             const itemId = this.getAttribute('data-item-id');
             const hiddenInput = currPopup.querySelector("[name='taskId']");
             hiddenInput.value = itemId;
+            hiddenInput.dispatchEvent(new Event('change'));
           }
 
           popupOpen(currPopup)
@@ -633,6 +636,7 @@ function editCompletedTask() {
                 const itemId = this.getAttribute('data-item-id');
                 const hiddenInput = currPopup.querySelector("[name='taskId']");
                 hiddenInput.value = itemId;
+                hiddenInput.dispatchEvent(new Event('change'));
               }
 
               popupOpen(currPopup)
