@@ -218,7 +218,7 @@ button {
 
 .input.error {
   border: 1px solid red;
-  color: red;
+  /* color: red; */
 }
 
 .input::-webkit-input-placeholder {
@@ -756,4 +756,9 @@ button {
         -ms-flex-direction: column;
             flex-direction: column;
   }
+}
+
+.errorlist {
+  margin-top: 5px;
+  color: red;
 }

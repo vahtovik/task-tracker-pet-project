@@ -97,6 +97,7 @@ def index(request):
 
 
 @login_required
+@csrf_exempt
 def add_pending_task(request):
     form = TaskListForm(request.POST)
     if form.is_valid():
@@ -131,6 +132,7 @@ def edit_pending_task(request):
 
 
 @login_required
+@csrf_exempt
 def remove_pending_task(request):
     pk = request.POST.get('taskId')
     if pk:
