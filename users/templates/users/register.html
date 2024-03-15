@@ -6,30 +6,22 @@
         <div class="auth">
             <form method="post" class="auth__form">
                 {% csrf_token %}
+                {% for field in form %}
                 <div class="form-group">
-                    {% if form.username.errors %}
-                    <input type="text" name="username" class="input auth__input error" placeholder="Введите логин">
-                    {{ form.username.errors }}
+                    {% if field.errors %}
+                    <input type="{{ field.field.widget.input_type }}"
+                           name="{{ field.name }}"
+                           class="input auth__input error"
+                           placeholder="{{ field.field.widget.attrs.placeholder }}">
+                    {{ field.errors }}
                     {% else %}
-                    <input type="text" name="username" class="input auth__input" placeholder="Введите логин">
+                    <input type="{{ field.field.widget.input_type }}"
+                           name="{{ field.name }}"
+                           class="input auth__input"
+                           placeholder="{{ field.field.widget.attrs.placeholder }}">
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {% if form.password1.errors %}
-                    <input type="password" name="password1" class="input auth__input error" placeholder="Введите пароль">
-                    {{ form.password1.errors }}
-                    {% else %}
-                    <input type="password" name="password1" class="input auth__input" placeholder="Введите пароль">
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {% if form.password2.errors %}
-                    <input type="password" name="password2" class="input auth__input error" placeholder="Повторите пароль">
-                    {{ form.password2.errors }}
-                    {% else %}
-                    <input type="password" name="password2" class="input auth__input" placeholder="Повторите пароль">
-                    {% endif %}
-                </div>
+                {% endfor %}
                 <button type="submit" class="btn btn-white" id="registerButton">Зарегистрироваться</button>
                 <a class="btn btn-white" href="{% url 'users:login' %}">Авторизация</a>
             </form>

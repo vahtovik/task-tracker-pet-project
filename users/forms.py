@@ -4,12 +4,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 
 class LoginUserForm(AuthenticationForm):
-    username = forms.CharField(label='', widget=forms.TextInput(), required=True, error_messages={
-        'required': 'Поле обязательно для заполнения',
-    })
-    password = forms.CharField(label='', widget=forms.PasswordInput(), required=True, error_messages={
-        'required': 'Поле обязательно для заполнения',
-    })
+    username = forms.CharField(label='', widget=forms.TextInput(attrs={'placeholder': 'Введите логин'}))
+    password = forms.CharField(label='', widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль'}))
 
     class Meta:
         model = get_user_model()
@@ -17,16 +13,9 @@ class LoginUserForm(AuthenticationForm):
 
 
 class RegisterUserForm(UserCreationForm):
-    username = forms.CharField(label='', widget=forms.TextInput(), required=True, error_messages={
-        'required': 'Поле обязательно для заполнения',
-        'unique': 'Пользователь с таким именем уже существует',
-    })
-    password1 = forms.CharField(label='', widget=forms.PasswordInput(), required=True, error_messages={
-        'required': 'Поле обязательно для заполнения',
-    })
-    password2 = forms.CharField(label='', widget=forms.PasswordInput(), required=True, error_messages={
-        'required': 'Поле обязательно для заполнения',
-    })
+    username = forms.CharField(label='', widget=forms.TextInput(attrs={'placeholder': 'Введите логин'}))
+    password1 = forms.CharField(label='', widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль'}))
+    password2 = forms.CharField(label='', widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль'}))
 
     class Meta:
         model = get_user_model()
