@@ -1,6 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!--<main class="main">-->
+<!--    <div class="container">-->
+<!--        <div class="auth">-->
+<!--            <form method="post" class="auth__form">-->
+<!--                {% csrf_token %}-->
+<!--                {% for field in form %}-->
+<!--                <div class="form-group">-->
+<!--                    {% if field.errors %}-->
+<!--                    <input type="{{ field.field.widget.input_type }}"-->
+<!--                           name="{{ field.name }}"-->
+<!--                           class="input auth__input error"-->
+<!--                           placeholder="{{ field.field.widget.attrs.placeholder }}">-->
+<!--                    {{ field.errors }}-->
+<!--                    {% else %}-->
+<!--                    <input type="{{ field.field.widget.input_type }}"-->
+<!--                           name="{{ field.name }}"-->
+<!--                           class="input auth__input"-->
+<!--                           placeholder="{{ field.field.widget.attrs.placeholder }}">-->
+<!--                    {% endif %}-->
+<!--                </div>-->
+<!--                {% endfor %}-->
+<!--                <button class="btn btn-white" type="submit">Войти</button>-->
+<!--                <a class="btn btn-white" href="{% url 'users:register' %}">Регистрация</a>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</main>-->
+<!--<footer></footer>-->
+
 <main class="main">
     <div class="container">
         <div class="auth">
@@ -8,18 +37,11 @@
                 {% csrf_token %}
                 {% for field in form %}
                 <div class="form-group">
-                    {% if field.errors %}
                     <input type="{{ field.field.widget.input_type }}"
                            name="{{ field.name }}"
-                           class="input auth__input error"
+                           class="input auth__input {% if field.errors %}error{% endif %}"
                            placeholder="{{ field.field.widget.attrs.placeholder }}">
                     {{ field.errors }}
-                    {% else %}
-                    <input type="{{ field.field.widget.input_type }}"
-                           name="{{ field.name }}"
-                           class="input auth__input"
-                           placeholder="{{ field.field.widget.attrs.placeholder }}">
-                    {% endif %}
                 </div>
                 {% endfor %}
                 <button class="btn btn-white" type="submit">Войти</button>
