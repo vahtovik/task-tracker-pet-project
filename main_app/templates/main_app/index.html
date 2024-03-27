@@ -9,8 +9,12 @@
                 <form action="#" method="POST" id="tasks__form" name="task_name">
                     {% csrf_token %}
                     <input type="text" class="input">
-                    <i class="_icon-plus plus-icon" onclick="addPendingTask()"></i>
-                    <i href="#warning-popup" class="_icon-play warning-popup" onclick="addActiveTask()"></i>
+                    <button type="submit" name="action" value="active">
+                        <i class="_icon-plus plus-icon" onclick="addPendingTask()"></i>
+                    </button>
+                    <button type="submit" class="btn-active-task" name="action" value="active">
+                        <i class="_icon-play warning-popup" onclick="addActiveTask()" href="#warning-popup" ></i>
+                    </button>
                 </form>
             </div>
             <div class="tasks__block active__tasks">

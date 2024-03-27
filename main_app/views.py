@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
@@ -55,7 +55,6 @@ def index(request):
 
     formatted_time_difference = None
     if active_task:
-        # time_difference = timezone.now() - active_task.task_start_time
         time_difference = timezone.now() - active_task.task_current_time
         formatted_time_difference = timedelta_to_mmss(time_difference)
     time_now = datetime.now().strftime('%H:%M')
@@ -94,6 +93,13 @@ def index(request):
         'formatted_time_difference': formatted_time_difference,
         'time_now': time_now,
     })
+
+
+
+@login_required
+@csrf_exempt
+def add_active_task(request):
+    return JsonResponse({'success': True})
 
 
 @login_required
@@ -156,7 +162,8 @@ def finish_active_task(request):
             task = TaskList.objects.get(pk=pk)
             task.is_active = False
             task.is_completed = True
-            task.completed_task_start_time = task.task_start_time
+            # task.completed_task_start_time = task.task_start_time
+            task.completed_task_start_time = task.creation_time
             task.completed_task_end_time = timezone.now()
             task.task_time_interval = format_timedelta(task.completed_task_end_time - task.task_current_time)
             task.save()
@@ -176,6 +183,7 @@ def add_completed_task(request):
     if request.method == 'POST':
         user = request.user
         task_name = request.POST.get('task_name')
+        # task_start_time = request.POST.get('task_start_time')
         task_start_time = request.POST.get('task_start_time')
         task_end_time = request.POST.get('task_end_time')
         if not task_start_time or not task_end_time:
@@ -208,7 +216,8 @@ def add_completed_task(request):
             return JsonResponse({
                 'success': True,
                 'task_id': new_task.pk,
-                'task_start_time': new_task.task_current_time,
+                # 'task_start_time': new_task.task_current_time,
+                'task_start_time': new_task.creation_time,
                 'task_end_time': new_task.completed_task_end_time,
                 'task_duration': task_duration,
             })
@@ -227,9 +236,10 @@ def edit_completed_task(request):
             task = TaskList.objects.get(pk=pk)
             task.task_name = request.POST.get('task_name')
             today_date = datetime.now().date()
-            task_start_time = request.POST.get('task_start_time')
+            # task_start_time = request.POST.get('task_start_time')
+            creation_time = request.POST.get('task_start_time')
             task_end_time = request.POST.get('task_end_time')
-            if task_start_time and task_end_time:
+            if creation_time and task_end_time:
                 start_hours, start_minutes = map(int, task_start_time.split(':'))
                 end_hours, end_minutes = map(int, task_end_time.split(':'))
                 start_time = datetime(today_date.year, today_date.month, today_date.day, start_hours, start_minutes)
@@ -251,7 +261,8 @@ def edit_completed_task(request):
             return JsonResponse({
                 'success': True,
                 'task_id': pk,
-                'start_time': task_start_time,
+                # 'start_time': task_start_time,
+                'start_time': creation_time,
                 'end_time': task_end_time,
                 'task_duration': task_duration,
             })

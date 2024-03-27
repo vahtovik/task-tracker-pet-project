@@ -4,6 +4,7 @@ from . import views
 app_name = 'main_app'
 urlpatterns = [
     path('', views.index, name='index'),
+    path('add-active-task/', views.add_active_task, name='add-active-task'),
     path('add-pending-task/', views.add_pending_task, name='add-pending-task'),
     path('edit-pending-task/', views.edit_pending_task, name='edit-pending-task'),
     path('remove-pending-task/', views.remove_pending_task, name='remove-pending-task'),

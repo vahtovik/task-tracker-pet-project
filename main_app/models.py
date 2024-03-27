@@ -5,7 +5,7 @@ from django.db import models
 class TaskList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     task_name = models.CharField(max_length=255)
-    task_start_time = models.DateTimeField(auto_now_add=True)
+    creation_time = models.DateTimeField(auto_now_add=True)
     task_current_time = models.DateTimeField(null=True)
     is_active = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
