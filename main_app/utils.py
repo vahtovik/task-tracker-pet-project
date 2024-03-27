@@ -6,7 +6,7 @@ def time_to_minutes(time_str):
     return hours * 60 + minutes
 
 
-def timedelta_to_mmss(td):
+def timedelta_to_minutes_and_seconds(td):
     minutes = td.seconds // 60
     seconds = td.seconds % 60
     return '{:02}:{:02}'.format(minutes, seconds)
@@ -23,12 +23,6 @@ def get_completed_tasks_total_time(completed_tasks):
     hours = total_minutes // 60
     minutes = total_minutes % 60
     return f'{hours} ч {minutes} м' if hours > 0 else f'{minutes} м'
-
-
-def get_time_difference(task):
-    time_difference = timezone.now() - task.creation_time
-    return timedelta_to_mmss(time_difference)
-
 
 
 MONTHS = {

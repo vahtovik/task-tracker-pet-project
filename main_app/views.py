@@ -13,36 +13,32 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import time_to_minutes, timedelta_to_mmss, format_timedelta, get_completed_tasks_total_time, MONTHS, \
-    get_time_difference
+from .utils import time_to_minutes, format_timedelta, get_completed_tasks_total_time, MONTHS
 
 
 @require_GET
 @login_required
 def index(request):
     form = TaskListForm()
-
-    active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
-    time_difference = None
-    if active_task:
-        time_difference = get_time_difference(active_task)
-
     today = timezone.now().date()
+
+    # Получаем активную задачу на таймере
+    active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+
+    # Получаем активные задачи не на таймере
     pending_tasks = TaskList.objects.filter(user=request.user, is_active=False, is_completed=False).order_by('order')
+
+    # Получаем выполненные задачи с временными интервалами
     completed_tasks_with_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
-        completed_task_start_time__date=today,
+        completed_task_start_time__date=today
     ).order_by('-task_current_time')
 
-    total_time = get_completed_tasks_total_time(completed_tasks_with_time)
+    # Вычисляем суммарное время выполненных задач с временными интервалами
+    completed_tasks_total_time = get_completed_tasks_total_time(completed_tasks_with_time)
 
-    for task in completed_tasks_with_time:
-        hours, minutes = map(int, task.task_time_interval.split(':'))
-        task.task_time_interval = "{:d} ч {:d} м".format(hours, minutes)
-
-    time_now = datetime.now().strftime('%H:%M')
-
+    # Получаем выполненные задачи без временных интервалов
     completed_tasks_no_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
@@ -53,12 +49,10 @@ def index(request):
         'active_task': active_task,
         'pending_tasks': pending_tasks,
         'completed_tasks_with_time': completed_tasks_with_time,
+        'completed_tasks_total_time': completed_tasks_total_time,
         'completed_tasks_no_time': completed_tasks_no_time,
-        'total_time': total_time,
         'month_day': today.day,
         'month': MONTHS.get(today.month),
-        'time_difference': time_difference,
-        'time_now': time_now,
     })
 
 

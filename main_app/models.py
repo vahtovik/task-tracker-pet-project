@@ -1,5 +1,10 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
+
+from main_app.utils import timedelta_to_minutes_and_seconds
 
 
 class TaskList(models.Model):
@@ -16,3 +21,27 @@ class TaskList(models.Model):
 
     def __str__(self):
         return self.task_name
+
+    def get_active_task_start_time(self):
+        local_time = timezone.localtime(self.creation_time, timezone=timezone.get_current_timezone())
+        return local_time.strftime('%H:%M')
+
+    @staticmethod
+    def get_active_task_current_time():
+        return datetime.now().strftime('%H:%M')
+
+    def get_active_task_time_difference(self):
+        time_difference = timezone.now() - self.creation_time
+        return timedelta_to_minutes_and_seconds(time_difference)
+
+    def get_completed_task_start_time(self):
+        local_time = timezone.localtime(self.completed_task_start_time, timezone=timezone.get_current_timezone())
+        return local_time.strftime('%H:%M')
+
+    def get_completed_task_end_time(self):
+        local_time = timezone.localtime(self.completed_task_end_time, timezone=timezone.get_current_timezone())
+        return local_time.strftime('%H:%M')
+
+    def get_completed_task_time_difference(self):
+        time_difference = self.completed_task_end_time - self.completed_task_start_time
+        return timedelta_to_minutes_and_seconds(time_difference)

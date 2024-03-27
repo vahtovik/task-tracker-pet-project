@@ -22,10 +22,11 @@
                                 {{ active_task }}
                             </div>
                             <div class="list__item__strend">
-                                {{ active_task.creation_time|date:"H:i" }} - {{ time_now }}
+                                {{ active_task.get_active_task_start_time }} -
+                                {{ active_task.get_active_task_current_time }}
                             </div>
                             <div class="list__item__sepndtime">
-                                <p>{{ time_difference }}</p>
+                                <p>{{ active_task.get_active_task_time_difference }}</p>
                                 <i class="_icon-stop-circle" onclick="finishActiveTask()"></i>
                             </div>
                         </a>
@@ -52,8 +53,8 @@
                         </a>
                     </div>
                     <div class="tasks__block__info__time">
-                        {% if total_time != "0 м" %}
-                        {{ total_time }}
+                        {% if completed_tasks_total_time != "0 м" %}
+                        {{ completed_tasks_total_time }}
                         {% endif %}
                     </div>
                 </div>
@@ -64,11 +65,11 @@
                            data-item-id="{{ task.pk }}">
                             <div class="list__item__title">{{ task }}</div>
                             <div class="list__item__strend">
-                                {{ task.task_current_time|date:"H:i" }} -
-                                {{ task.completed_task_end_time|date:"H:i" }}
+                                {{ task.get_completed_task_start_time }} -
+                                {{ task.get_completed_task_end_time }}
                             </div>
                             <div class="list__item__sepndtime">
-                                {{ task.task_time_interval|format_time_interval }}
+                                {{ task.get_completed_task_time_difference }}
                             </div>
                         </a>
                     </li>
