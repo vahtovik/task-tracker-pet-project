@@ -99,24 +99,20 @@ def index(request):
 def add_active_task(request):
     if request.method == 'POST':
         form = TaskListForm(request.POST)
-        action = request.POST.get('action')
-        if action == 'active':
-            active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
-            if not active_task:
-                if form.is_valid():
-                    task = form.save(commit=False)
-                    task.user = request.user
-                    task.is_active = True
-                    task.task_current_time = timezone.now()
-                    task.save()
-                    start = datetime.now().strftime('%H:%M')
-                    return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
-                else:
-                    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+        if not active_task:
+            if form.is_valid():
+                task = form.save(commit=False)
+                task.user = request.user
+                task.is_active = True
+                task.task_current_time = timezone.now()
+                task.save()
+                start = datetime.now().strftime('%H:%M')
+                return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
             else:
-                return JsonResponse({'success': False, 'task_already_present': True})
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
         else:
-            pass
+            return JsonResponse({'success': False, 'task_already_present': True})
 
     return HttpResponseNotAllowed(['POST'])
 

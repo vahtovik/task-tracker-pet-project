@@ -1,32 +1,31 @@
 function addActiveTask() {
-    let activeTasksDiv = document.querySelector(".active__tasks");
-    let listItem = activeTasksDiv.querySelector("li.active__task");
+    // Ищем на странице активную задачу
+    let activeTask = document
+        .querySelector(".active__tasks")
+        .querySelector("li.active__task");
 
-    if (listItem) {
+    // Проверяем присутствует ли на странице активная задача
+    if (activeTask) {
         let currPopup = document.getElementById("warning-popup");
         popupOpen(currPopup);
         return;
     }
 
+    // Собираем данные формы
     let form = document.getElementById("tasks__form");
-    let taskName = form.querySelector(".input").value;
+    let formData = new FormData(form);
+    let taskName = form.task_name.value;
 
+    // Проверяем, что текст задачи не пустой
     if (taskName.trim() === "") {
         alert("Введите название задачи");
         return;
     }
 
-    // Собираем данные формы
-    let formData = new FormData(form);
-    formData.append("task_name", taskName);
-
     // Отправляем асинхронный запрос на сервер
-    fetch(form.action, {
-        method: form.method,
+    fetch("/add-active-task/", {
+        method: "POST",
         body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
     })
         .then((response) => {
             if (!response.ok) {
@@ -35,7 +34,7 @@ function addActiveTask() {
             return response.json();
         })
         .then((data) => {
-            // Обработка ответа от сервера
+            // Проверяем, есть ли в БД активная задача
             let task_already_present = data.task_already_present;
             if (task_already_present) {
                 let currPopup = document.getElementById("warning-popup");

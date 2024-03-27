@@ -6,9 +6,9 @@
     <div class="container">
         <div class="tasks">
             <div class="tasks__form">
-                <form action="#" method="POST" id="tasks__form" name="task_name">
+                <form method="POST" id="tasks__form">
                     {% csrf_token %}
-                    <input type="text" class="input">
+                    <input type="text" class="input" name="task_name">
                     <i class="_icon-plus plus-icon" onclick="addPendingTask()"></i>
                     <i class="_icon-play warning-popup" onclick="addActiveTask()" href="#warning-popup"></i>
                 </form>
