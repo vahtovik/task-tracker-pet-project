@@ -118,21 +118,19 @@ def add_active_task(request):
 
 
 @login_required
-@csrf_exempt
 def add_pending_task(request):
-    form = TaskListForm(request.POST)
-    if form.is_valid():
-        task = form.save(commit=False)
-        task.user = request.user
-        task.is_active = False
-        task.save()
-        task.order = TaskList.objects.filter(
-            user=request.user,
-            is_completed=False
-        ).aggregate(max_order=Max('order')).get('max_order') + 1
-        return JsonResponse({'success': True, 'task_id': task.pk})
-    else:
-        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    if request.method == 'POST':
+        form = TaskListForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.user = request.user
+            task.is_active = False
+            task.save()
+            return JsonResponse({'success': True, 'task_id': task.pk})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required

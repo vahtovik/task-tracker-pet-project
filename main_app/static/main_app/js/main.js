@@ -108,6 +108,74 @@ function addActiveTask() {
     form.querySelector(".input").value = "";
 }
 
+function addPendingTask() {
+    // Собираем данные формы
+    let form = document.getElementById("tasks__form");
+    let formData = new FormData(form);
+    let taskName = form.task_name.value;
+
+    if (taskName.trim() === "") {
+        alert("Введите название задачи");
+        return;
+    }
+
+    // Отправляем асинхронный запрос на сервер
+    fetch("/add-pending-task/", {
+        method: "POST",
+        body: formData,
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Обработка ответа от сервера
+            let taskList = document.querySelector(".tasks__block__list");
+            let taskId = data.task_id;
+
+            let taskLi = document.createElement("li");
+            taskLi.classList.add(
+                "tasks__block__list__item",
+                "list__item",
+                "waiting-task"
+            );
+
+            let innerA = document.createElement("a");
+            innerA.href = "#edit-task-popup";
+            innerA.classList.add("list__item__link", "popup-link");
+            innerA.setAttribute("data-item-id", taskId);
+
+            let innerTitleDiv = document.createElement("div");
+            innerTitleDiv.className = "list__item__title";
+            innerTitleDiv.textContent = taskName;
+
+            let innerHoverDiv = document.createElement("div");
+            innerHoverDiv.className = "list__item__run";
+
+            let iElement = document.createElement("i");
+            iElement.classList.add("_icon-play");
+            iElement.addEventListener("click", makePendingTaskActive);
+
+            innerHoverDiv.appendChild(iElement);
+
+            innerA.appendChild(innerTitleDiv);
+            innerA.appendChild(innerHoverDiv);
+
+            taskLi.appendChild(innerA);
+
+            taskList.appendChild(taskLi);
+
+            innerA.addEventListener("click", bindTaskWithPopup);
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+
+    form.querySelector(".input").value = "";
+}
+
 function finishActiveTask() {
     let taskId = document
         .querySelector(".active__task a")
@@ -184,79 +252,6 @@ function finishActiveTask() {
         .catch((error) => {
             console.error("Произошла ошибка:", error);
         });
-}
-
-function addPendingTask() {
-    let form = document.getElementById("tasks__form");
-    let taskName = form.querySelector(".input").value;
-
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
-
-    // Собираем данные формы
-    let formData = new FormData(form);
-    formData.append("task_name", taskName);
-
-    // Отправляем асинхронный запрос на сервер
-    fetch("/add-pending-task/", {
-        method: form.method,
-        body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Ошибка сети");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            // Обработка ответа от сервера
-            let taskList = document.querySelector(".tasks__block__list");
-            let taskId = data.task_id;
-
-            let taskLi = document.createElement("li");
-            taskLi.classList.add(
-                "tasks__block__list__item",
-                "list__item",
-                "waiting-task"
-            );
-
-            let innerA = document.createElement("a");
-            innerA.href = "#edit-task-popup";
-            innerA.classList.add("list__item__link", "popup-link");
-            innerA.setAttribute("data-item-id", taskId);
-
-            let innerTitleDiv = document.createElement("div");
-            innerTitleDiv.className = "list__item__title";
-            innerTitleDiv.textContent = taskName;
-
-            let innerHoverDiv = document.createElement("div");
-            innerHoverDiv.className = "list__item__run";
-
-            let iElement = document.createElement("i");
-            iElement.classList.add("_icon-play");
-            iElement.addEventListener("click", makePendingTaskActive);
-
-            innerHoverDiv.appendChild(iElement);
-
-            innerA.appendChild(innerTitleDiv);
-            innerA.appendChild(innerHoverDiv);
-
-            taskLi.appendChild(innerA);
-
-            taskList.appendChild(taskLi);
-
-            innerA.addEventListener("click", bindTaskWithPopup);
-        })
-        .catch((error) => {
-            console.error("Произошла ошибка:", error);
-        });
-
-    form.querySelector(".input").value = "";
 }
 
 function saveEditableTask() {
