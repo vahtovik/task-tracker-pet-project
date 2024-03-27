@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Max
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseNotAllowed
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -95,11 +95,30 @@ def index(request):
     })
 
 
-
 @login_required
-@csrf_exempt
 def add_active_task(request):
-    return JsonResponse({'success': True})
+    if request.method == 'POST':
+        form = TaskListForm(request.POST)
+        action = request.POST.get('action')
+        if action == 'active':
+            active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+            if not active_task:
+                if form.is_valid():
+                    task = form.save(commit=False)
+                    task.user = request.user
+                    task.is_active = True
+                    task.task_current_time = timezone.now()
+                    task.save()
+                    start = datetime.now().strftime('%H:%M')
+                    return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
+                else:
+                    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            else:
+                return JsonResponse({'success': False, 'task_already_present': True})
+        else:
+            pass
+
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required

@@ -176,10 +176,6 @@ button {
   /* Remove the default focus outline */
 }
 
-.btn-active-task {
-  padding-top: 7.5px;
-}
-
 .btn {
   padding: 12px 0px;
   text-align: center;
@@ -568,13 +564,13 @@ button {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  gap: 7.5px;
+  gap: 15px;
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
 }
 
-.tasks__form form button .plus-icon {
+.tasks__form form .plus-icon {
   position: absolute;
   top: 50%;
   right: 52px;
