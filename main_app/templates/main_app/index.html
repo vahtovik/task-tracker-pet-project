@@ -22,10 +22,10 @@
                                 {{ active_task }}
                             </div>
                             <div class="list__item__strend">
-                                {{ active_task.task_current_time|date:"H:i" }} - {{ time_now }}
+                                {{ active_task.creation_time|date:"H:i" }} - {{ time_now }}
                             </div>
                             <div class="list__item__sepndtime">
-                                <p>{{ formatted_time_difference }}</p>
+                                <p>{{ time_difference }}</p>
                                 <i class="_icon-stop-circle" onclick="finishActiveTask()"></i>
                             </div>
                         </a>

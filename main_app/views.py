@@ -5,37 +5,28 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Max
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseNotAllowed
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import time_to_minutes, timedelta_to_mmss, format_timedelta
-
-months = {
-    1: 'января',
-    2: 'февраля',
-    3: 'марта',
-    4: 'апреля',
-    5: 'мая',
-    6: 'июня',
-    7: 'июля',
-    8: 'августа',
-    9: 'сентября',
-    10: 'октября',
-    11: 'ноября',
-    12: 'декабря'
-}
+from .utils import time_to_minutes, timedelta_to_mmss, format_timedelta, get_completed_tasks_total_time, MONTHS, \
+    get_time_difference
 
 
+@require_GET
 @login_required
 def index(request):
-    try:
-        active_task = TaskList.objects.get(user=request.user, is_active=True)
-    except ObjectDoesNotExist:
-        active_task = None
+    form = TaskListForm()
+
+    active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+    time_difference = None
+    if active_task:
+        time_difference = get_time_difference(active_task)
+
     today = timezone.now().date()
     pending_tasks = TaskList.objects.filter(user=request.user, is_active=False, is_completed=False).order_by('order')
     completed_tasks_with_time = TaskList.objects.filter(
@@ -44,19 +35,12 @@ def index(request):
         completed_task_start_time__date=today,
     ).order_by('-task_current_time')
 
-    total_minutes = sum(time_to_minutes(task.task_time_interval) for task in completed_tasks_with_time)
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-    total_time = f'{hours} ч {minutes} м' if hours > 0 else f'{minutes} м'
+    total_time = get_completed_tasks_total_time(completed_tasks_with_time)
 
     for task in completed_tasks_with_time:
         hours, minutes = map(int, task.task_time_interval.split(':'))
         task.task_time_interval = "{:d} ч {:d} м".format(hours, minutes)
 
-    formatted_time_difference = None
-    if active_task:
-        time_difference = timezone.now() - active_task.task_current_time
-        formatted_time_difference = timedelta_to_mmss(time_difference)
     time_now = datetime.now().strftime('%H:%M')
 
     completed_tasks_no_time = TaskList.objects.filter(
@@ -64,23 +48,6 @@ def index(request):
         is_completed=True,
         completed_task_start_time__date=None,
     )
-    if request.method == 'POST':
-        form = TaskListForm(request.POST)
-        if not active_task:
-            if form.is_valid():
-                task = form.save(commit=False)
-                task.user = request.user
-                task.is_active = True
-                task.task_current_time = timezone.now()
-                task.save()
-                start = datetime.now().strftime('%H:%M')
-                return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-        else:
-            return JsonResponse({'success': False, 'task_already_present': True})
-    else:
-        form = TaskListForm()
     return render(request, 'main_app/index.html', {
         'form': form,
         'active_task': active_task,
@@ -89,48 +56,44 @@ def index(request):
         'completed_tasks_no_time': completed_tasks_no_time,
         'total_time': total_time,
         'month_day': today.day,
-        'month': months.get(today.month),
-        'formatted_time_difference': formatted_time_difference,
+        'month': MONTHS.get(today.month),
+        'time_difference': time_difference,
         'time_now': time_now,
     })
 
 
+@require_POST
 @login_required
 def add_active_task(request):
-    if request.method == 'POST':
-        form = TaskListForm(request.POST)
-        active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
-        if not active_task:
-            if form.is_valid():
-                task = form.save(commit=False)
-                task.user = request.user
-                task.is_active = True
-                task.task_current_time = timezone.now()
-                task.save()
-                start = datetime.now().strftime('%H:%M')
-                return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-        else:
-            return JsonResponse({'success': False, 'task_already_present': True})
-
-    return HttpResponseNotAllowed(['POST'])
-
-
-@login_required
-def add_pending_task(request):
-    if request.method == 'POST':
-        form = TaskListForm(request.POST)
+    form = TaskListForm(request.POST)
+    active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+    if not active_task:
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
-            task.is_active = False
+            task.is_active = True
+            task.task_current_time = timezone.now()
             task.save()
-            return JsonResponse({'success': True, 'task_id': task.pk})
+            start = datetime.now().strftime('%H:%M')
+            return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    else:
+        return JsonResponse({'success': False, 'task_already_present': True})
 
-    return HttpResponseNotAllowed(['POST'])
+
+@require_POST
+@login_required
+def add_pending_task(request):
+    form = TaskListForm(request.POST)
+    if form.is_valid():
+        task = form.save(commit=False)
+        task.user = request.user
+        task.is_active = False
+        task.save()
+        return JsonResponse({'success': True, 'task_id': task.pk})
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @login_required
