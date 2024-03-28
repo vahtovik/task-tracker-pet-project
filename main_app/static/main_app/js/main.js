@@ -311,22 +311,23 @@ function editPendingTask() {
 }
 
 function removePendingTask() {
-    let form = document.getElementById("edit__pending__popup__form");
-
     // Собираем данные формы
+    let form = document.getElementById("edit__pending__popup__form");
     let formData = new FormData(form);
 
     // Отправляем асинхронный запрос на сервер
     fetch("/remove-pending-task/", {
-        method: form.method,
+        method: "POST",
         body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
         .then((data) => {
-            let task_id = data.task_id;
+            let taskId = data.task_id;
             let tasksList = document.getElementById(
                 "upper__tasks__block__list"
             );
@@ -335,12 +336,11 @@ function removePendingTask() {
             );
 
             listItems.forEach(function (item) {
-                // Проверка наличия атрибута "data-item-id" и сравнение его значения с желаемым
+                // Проверка наличия атрибута "data-item-id" и сравнение его значения с необходимым
                 if (
                     item.hasAttribute("data-item-id") &&
-                    item.getAttribute("data-item-id") == task_id
+                    item.getAttribute("data-item-id") == taskId
                 ) {
-                    // Добавление класса "highlight" к текущему элементу <li>
                     let li = item.closest("li");
                     let popupId = item.getAttribute("href").replace("#", "");
                     let popupActive = document.getElementById(popupId);
