@@ -17,10 +17,7 @@ function addActiveTask() {
     let taskName = form.task_name.value;
 
     // Проверяем, что текст задачи не пустой
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
+    checkIfEmpty(taskName);
 
     // Отправляем асинхронный запрос на сервер
     fetch("/add-active-task/", {
@@ -116,10 +113,8 @@ function addPendingTask() {
     let formData = new FormData(form);
     let taskName = form.task_name.value;
 
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
+    // Проверяем, что текст задачи не пустой
+    checkIfEmpty(taskName);
 
     // Отправляем асинхронный запрос на сервер
     fetch("/add-pending-task/", {
@@ -264,23 +259,65 @@ function finishActiveTask() {
         });
 }
 
-function saveEditableTask() {
-    let form = document.getElementById("edit__pending__popup__form");
-    let taskName = form.querySelector(".input").value;
-
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
-
+function editPendingTask() {
     // Собираем данные формы
+    let form = document.getElementById("edit__pending__popup__form");
     let formData = new FormData(form);
-    formData.append("task_name", taskName);
+    let taskName = form.task_name.value;
 
-    console.log(taskName);
+    // Проверяем, что текст задачи не пустой
+    checkIfEmpty(taskName);
 
     // Отправляем асинхронный запрос на сервер
     fetch("/edit-pending-task/", {
+        method: "POST",
+        body: formData,
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            let taskId = data.task_id;
+            let tasksList = document.getElementById(
+                "upper__tasks__block__list"
+            );
+            let listItems = tasksList.querySelectorAll(
+                ".tasks__block__list__item a"
+            );
+
+            listItems.forEach(function (item) {
+                // Проверка наличия атрибута "data-item-id" и сравнение его значения с необходимым
+                if (
+                    item.hasAttribute("data-item-id") &&
+                    item.getAttribute("data-item-id") == taskId
+                ) {
+                    let divTitle = item.querySelector(".list__item__title");
+                    divTitle.textContent = taskName;
+
+                    let popupId = item.getAttribute("href").replace("#", "");
+                    let popupActive = document.getElementById(popupId);
+                    popupActive.querySelector("input[name='task_name']").value =
+                        "";
+                    popupClose(popupActive);
+                }
+            });
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+}
+
+function removePendingTask() {
+    let form = document.getElementById("edit__pending__popup__form");
+
+    // Собираем данные формы
+    let formData = new FormData(form);
+
+    // Отправляем асинхронный запрос на сервер
+    fetch("/remove-pending-task/", {
         method: form.method,
         body: formData,
         headers: {
@@ -304,14 +341,12 @@ function saveEditableTask() {
                     item.getAttribute("data-item-id") == task_id
                 ) {
                     // Добавление класса "highlight" к текущему элементу <li>
-                    let divTitle = item.querySelector(".list__item__title");
-                    divTitle.textContent = taskName;
-
+                    let li = item.closest("li");
                     let popupId = item.getAttribute("href").replace("#", "");
                     let popupActive = document.getElementById(popupId);
-                    popupActive.querySelector("input[name='task_name']").value =
-                        "";
+
                     popupClose(popupActive);
+                    li.remove();
                 }
             });
         })
@@ -324,10 +359,9 @@ function addCompletedTask() {
     let form = document.getElementById("add__completed__task__popup__form");
 
     let taskName = form.querySelector(".task__name").value;
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
+
+    // Проверяем, что текст задачи не пустой
+    checkIfEmpty(taskName);
 
     let taskStart = form.querySelector(".task__start").value;
     let taskEnd = form.querySelector(".task__end").value;
@@ -541,10 +575,9 @@ function editCompletedTask() {
     let form = document.getElementById("edit__completed__task__popup__form");
 
     let taskName = form.querySelector(".task__name").value;
-    if (taskName.trim() === "") {
-        alert("Введите название задачи");
-        return;
-    }
+
+    // Проверяем, что текст задачи не пустой
+    checkIfEmpty(taskName);
 
     let taskStart = form.querySelector(".task__start").value;
     let taskEnd = form.querySelector(".task__end").value;
@@ -773,51 +806,6 @@ function deleteCompletedTask() {
             });
 
             sortAndGetTotalTime();
-        })
-        .catch((error) => {
-            console.error("Произошла ошибка:", error);
-        });
-}
-
-function deleteEditableTask() {
-    let form = document.getElementById("edit__pending__popup__form");
-
-    // Собираем данные формы
-    let formData = new FormData(form);
-
-    // Отправляем асинхронный запрос на сервер
-    fetch("/remove-pending-task/", {
-        method: form.method,
-        body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            let task_id = data.task_id;
-            let tasksList = document.getElementById(
-                "upper__tasks__block__list"
-            );
-            let listItems = tasksList.querySelectorAll(
-                ".tasks__block__list__item a"
-            );
-
-            listItems.forEach(function (item) {
-                // Проверка наличия атрибута "data-item-id" и сравнение его значения с желаемым
-                if (
-                    item.hasAttribute("data-item-id") &&
-                    item.getAttribute("data-item-id") == task_id
-                ) {
-                    // Добавление класса "highlight" к текущему элементу <li>
-                    let li = item.closest("li");
-                    let popupId = item.getAttribute("href").replace("#", "");
-                    let popupActive = document.getElementById(popupId);
-
-                    popupClose(popupActive);
-                    li.remove();
-                }
-            });
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);

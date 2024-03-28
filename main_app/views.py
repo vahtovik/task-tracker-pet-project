@@ -114,8 +114,8 @@ def finish_active_task(request):
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def edit_pending_task(request):
     form = GetPendingTaskForm(request.POST)
     if form.is_valid():
@@ -131,8 +131,8 @@ def edit_pending_task(request):
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def remove_pending_task(request):
     pk = request.POST.get('taskId')
     if pk:

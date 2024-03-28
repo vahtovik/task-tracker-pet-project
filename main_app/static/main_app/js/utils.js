@@ -627,3 +627,10 @@ function makePopupOpen() {
         }
     }
 }
+
+function checkIfEmpty(taskName) {
+    if (taskName.trim() === "") {
+        alert("Введите название задачи");
+        return;
+    }
+}
