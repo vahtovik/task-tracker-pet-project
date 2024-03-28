@@ -646,12 +646,12 @@ button {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.enable-hover .list__item__link:hover .list__item__sepndtime p {
+.enable-hover .list__item__link:hover .list__item__spendtime p {
   opacity: 0;
   visibility: hidden;
 }
 
-.enable-hover .list__item__link:hover .list__item__sepndtime i {
+.enable-hover .list__item__link:hover .list__item__spendtime i {
   display: block;
 }
 
@@ -669,12 +669,12 @@ button {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.list__item.active__task .list__item__link:hover .list__item__sepndtime p {
+.list__item.active__task .list__item__link:hover .list__item__spendtime p {
   opacity: 0;
   visibility: hidden;
 }
 
-.list__item.active__task .list__item__link:hover .list__item__sepndtime i {
+.list__item.active__task .list__item__link:hover .list__item__spendtime i {
   display: block;
 }
 
@@ -705,7 +705,7 @@ button {
           flex-grow: 1;
 }
 
-.list__item__sepndtime {
+.list__item__spendtime {
   -webkit-box-flex: 1;
       -ms-flex-positive: 1;
           flex-grow: 1;
@@ -716,7 +716,7 @@ button {
   position: relative;
 }
 
-.list__item__sepndtime i {
+.list__item__spendtime i {
   position: absolute;
   top: 10px;
   right: 0;

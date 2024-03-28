@@ -90,6 +90,30 @@ def add_pending_task(request):
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
+@require_POST
+@login_required
+def finish_active_task(request):
+    body_unicode = request.body.decode('utf-8')
+    pk = json.loads(body_unicode).get('taskId')
+    if pk:
+        try:
+            task = TaskList.objects.get(pk=pk)
+            task.is_active = False
+            task.is_completed = True
+            task.completed_task_start_time = task.creation_time
+            task.completed_task_end_time = timezone.now()
+            task.task_time_interval = format_timedelta(task.completed_task_end_time - task.task_current_time)
+            task.save()
+            return JsonResponse({
+                'success': True,
+                'task_duration': (task.completed_task_end_time - task.task_current_time).seconds // 60,
+            })
+        except TaskList.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+
+
 @login_required
 @csrf_exempt
 def edit_pending_task(request):
@@ -116,31 +140,6 @@ def remove_pending_task(request):
             task = TaskList.objects.get(pk=pk)
             task.delete()
             return JsonResponse({'success': True, 'task_id': pk})
-        except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
-    else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
-
-
-@login_required
-@csrf_exempt
-def finish_active_task(request):
-    body_unicode = request.body.decode('utf-8')
-    pk = json.loads(body_unicode).get('taskId')
-    if pk:
-        try:
-            task = TaskList.objects.get(pk=pk)
-            task.is_active = False
-            task.is_completed = True
-            # task.completed_task_start_time = task.task_start_time
-            task.completed_task_start_time = task.creation_time
-            task.completed_task_end_time = timezone.now()
-            task.task_time_interval = format_timedelta(task.completed_task_end_time - task.task_current_time)
-            task.save()
-            return JsonResponse({
-                'success': True,
-                'task_duration': (task.completed_task_end_time - task.task_current_time).seconds // 60,
-            })
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
     else:

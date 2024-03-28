@@ -208,7 +208,7 @@ addEventListener("DOMContentLoaded", () => {
     let activeTask = document.querySelector(".active__task");
 
     if (activeTask) {
-        let timerDiv = activeTask.querySelector(".list__item__sepndtime p");
+        let timerDiv = activeTask.querySelector(".list__item__spendtime p");
         startTimer(timerDiv);
     }
     /* TIMER SECTION ENDS */
@@ -560,9 +560,9 @@ function sortAndGetTotalTime() {
 
     // Удаляем элементы с классом .with__time из tasksList
     tasksWithTime.forEach((task) => {
-        // Получаем время из тега с классом .list__item__sepndtime
+        // Получаем время из тега с классом .list__item__spendtime
         let duration = task
-            .querySelector(".list__item__sepndtime")
+            .querySelector(".list__item__spendtime")
             .textContent.trim();
         // Разбиваем время на часы и минуты
         let timeSplitted = duration.split(" ");

@@ -67,7 +67,7 @@ function addActiveTask() {
             innerStrendDiv.textContent = `${start} - ${start}`;
 
             let innerStrendTimeDiv = document.createElement("div");
-            innerStrendTimeDiv.className = "list__item__sepndtime";
+            innerStrendTimeDiv.className = "list__item__spendtime";
 
             let pElement = document.createElement("p");
             pElement.textContent = "00:00";
@@ -87,17 +87,19 @@ function addActiveTask() {
 
             taskList.appendChild(taskLi);
 
+            // Берем первый чайлд у списка активных задач
             let firstTask = taskList.firstChild;
             if (firstTask !== null) {
-                // Если есть, вставляем новый элемент перед первым элементом в списке
+                // Если задачи есть, вставляем новый элемент перед первым элементом в списке
                 taskList.insertBefore(taskLi, firstTask);
             } else {
-                // Если список пуст, просто добавляем новый элемент в конец
+                // Если задач нет, просто добавляем новый элемент в конец
                 taskList.appendChild(taskLi);
             }
 
             let activeTask = document.querySelector(".active__task");
-            let timerDiv = activeTask.querySelector(".list__item__sepndtime p");
+            let timerDiv = activeTask.querySelector(".list__item__spendtime p");
+
             // Стартуем секундомер для новой задачи
             startTimer(timerDiv);
         })
@@ -131,7 +133,6 @@ function addPendingTask() {
             return response.json();
         })
         .then((data) => {
-            // Обработка ответа от сервера
             let taskList = document.querySelector(".tasks__block__list");
             let taskId = data.task_id;
 
@@ -177,27 +178,38 @@ function addPendingTask() {
 }
 
 function finishActiveTask() {
+    // Получаем первичный ключ активной задачи
     let taskId = document
         .querySelector(".active__task a")
         .getAttribute("data-item-id");
 
+    // Получаем значение csrf токена
+    let csrfTokenInput = document
+        .getElementById("tasks__form")
+        .querySelector('input[name="csrfmiddlewaretoken"]');
+    let csrfTokenValue = csrfTokenInput.value;
+
+    // Получаем время активной задачи
     let timeCurrent = document.querySelector(
-        ".active__task .list__item__sepndtime p"
+        ".active__task .list__item__spendtime p"
     ).textContent;
     let timeCurrentSplitted = timeCurrent.split(":");
     let minutesCurrent = timeCurrentSplitted[0].trim();
     let minutesCurrentInt = parseInt(minutesCurrent, 10);
 
+    // Проверяем что время активной задачи не менее 1 минуты
     if (minutesCurrentInt < 1) {
         popupOpen(document.getElementById("less-than-minute-popup"));
         return;
     }
 
+    // Отправляем асинхронный запрос на сервер
     fetch("/finish-active-task/", {
         method: "POST",
         body: JSON.stringify({ taskId }),
         headers: {
             "Content-Type": "application/json",
+            "X-CSRFToken": csrfTokenValue,
         },
     })
         .then((response) => {
@@ -207,9 +219,7 @@ function finishActiveTask() {
             return response.json();
         })
         .then((data) => {
-            console.log("hi");
-            let task_duration = data.task_duration;
-
+            let taskDuration = data.task_duration;
             let activeTask = document.querySelector(".active__task");
             let clonedElement = activeTask.cloneNode(true);
             activeTask.remove();
@@ -220,8 +230,8 @@ function finishActiveTask() {
                 .setAttribute("href", "#edit-completed-task-popup");
             clonedElement.querySelector("a").classList.add("popup-link");
 
-            clonedElement.querySelector(".list__item__sepndtime").textContent =
-                formatDuration(task_duration);
+            clonedElement.querySelector(".list__item__spendtime").textContent =
+                formatDuration(taskDuration);
 
             let ul = document.getElementById("today__tasks__block__list");
             ul.appendChild(clonedElement);
@@ -448,7 +458,7 @@ function addCompletedTask() {
                 // Форматируем разницу времени в строку "HH:MM"
                 var formattedDifference = formatDuration(task_duration);
 
-                innerSpendTimeDiv.className = "list__item__sepndtime";
+                innerSpendTimeDiv.className = "list__item__spendtime";
                 innerSpendTimeDiv.textContent = formattedDifference;
 
                 innerA.appendChild(innerTitleDiv);
@@ -483,7 +493,7 @@ function addCompletedTask() {
                 sortAndGetTotalTime();
             } else {
                 innerStrendDiv.className = "list__item__strend";
-                innerSpendTimeDiv.className = "list__item__sepndtime";
+                innerSpendTimeDiv.className = "list__item__spendtime";
 
                 innerA.appendChild(innerTitleDiv);
                 innerA.appendChild(innerStrendDiv);
@@ -629,7 +639,7 @@ function editCompletedTask() {
                             formatDuration(task_duration);
 
                         item.querySelector(
-                            ".list__item__sepndtime"
+                            ".list__item__spendtime"
                         ).textContent = taskDurationFormatted;
                         item.querySelector(".list__item__title").textContent =
                             taskName;
@@ -663,7 +673,7 @@ function editCompletedTask() {
                         divTime.textContent = "";
 
                         item.querySelector(
-                            ".list__item__sepndtime"
+                            ".list__item__spendtime"
                         ).textContent = "";
 
                         let popupId = item
@@ -904,7 +914,7 @@ function makePendingTaskActive(e) {
             innerStrendDiv.textContent = `${start} - ${start}`;
 
             let innerStrendTimeDiv = document.createElement("div");
-            innerStrendTimeDiv.className = "list__item__sepndtime";
+            innerStrendTimeDiv.className = "list__item__spendtime";
 
             let pElement = document.createElement("p");
             pElement.textContent = "00:00";
@@ -934,7 +944,7 @@ function makePendingTaskActive(e) {
             }
 
             let activeTask = document.querySelector(".active__task");
-            let timerDiv = activeTask.querySelector(".list__item__sepndtime p");
+            let timerDiv = activeTask.querySelector(".list__item__spendtime p");
             // Стартуем секундомер для новой задачи
             startTimer(timerDiv);
         })

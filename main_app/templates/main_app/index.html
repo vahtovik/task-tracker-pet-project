@@ -25,7 +25,7 @@
                                 {{ active_task.get_active_task_start_time }} -
                                 {{ active_task.get_active_task_current_time }}
                             </div>
-                            <div class="list__item__sepndtime">
+                            <div class="list__item__spendtime">
                                 <p>{{ active_task.get_active_task_time_difference }}</p>
                                 <i class="_icon-stop-circle" onclick="finishActiveTask()"></i>
                             </div>
@@ -68,7 +68,7 @@
                                 {{ task.get_completed_task_start_time }} -
                                 {{ task.get_completed_task_end_time }}
                             </div>
-                            <div class="list__item__sepndtime">
+                            <div class="list__item__spendtime">
                                 {{ task.get_completed_task_time_difference }}
                             </div>
                         </a>
@@ -80,7 +80,7 @@
                            data-item-id="{{ task.pk }}">
                             <div class="list__item__title">{{ task }}</div>
                             <div class="list__item__strend"></div>
-                            <div class="list__item__sepndtime"></div>
+                            <div class="list__item__spendtime"></div>
                         </a>
                     </li>
                     {% endfor %}
@@ -98,14 +98,14 @@
                         <a href="#" class="list__item__link">
                             <div class="list__item__title">Текст для выполняемой задачи</div>
                             <div class="list__item__strend">6:50 - 7:05</div>
-                            <div class="list__item__sepndtime">15:47</div>
+                            <div class="list__item__spendtime">15:47</div>
                         </a>
                     </li>
                     <li class="tasks__block__list__item list__item done">
                         <a href="#" class="list__item__link">
                             <div class="list__item__title">Текст для выполняемой задачи</div>
                             <div class="list__item__strend"></div>
-                            <div class="list__item__sepndtime"></div>
+                            <div class="list__item__spendtime"></div>
                         </a>
                     </li>
                 </ul>
