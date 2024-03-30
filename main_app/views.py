@@ -31,7 +31,7 @@ def index(request):
         user=request.user,
         is_completed=True,
         completed_task_start_time__date=today
-    ).order_by('-task_current_time')
+    ).order_by('-completed_task_start_time')
 
     # Вычисляем суммарное время выполненных задач с временными интервалами
     completed_tasks_total_time = get_completed_tasks_total_time(completed_tasks_with_time)
