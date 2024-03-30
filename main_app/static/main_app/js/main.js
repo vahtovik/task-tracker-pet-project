@@ -700,20 +700,21 @@ function editCompletedTask() {
 }
 
 function deleteCompletedTask() {
-    let form = document.getElementById("edit__completed__task__popup__form");
-
     // Собираем данные формы
+    let form = document.getElementById("edit__completed__task__popup__form");
     let formData = new FormData(form);
 
     // Отправляем асинхронный запрос на сервер
     fetch("/delete-completed-task/", {
-        method: form.method,
+        method: "POST",
         body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
         .then((data) => {
             let task_id = data.task_id;
             let tasksList = document.getElementById(

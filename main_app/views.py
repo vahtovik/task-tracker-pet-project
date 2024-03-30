@@ -211,10 +211,10 @@ def edit_completed_task(request):
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def delete_completed_task(request):
-    pk = request.POST.get('taskId')
+    pk = request.POST.get('task_id')
     if pk:
         try:
             task = TaskList.objects.get(pk=pk)

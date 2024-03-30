@@ -65,7 +65,9 @@ addEventListener("DOMContentLoaded", () => {
         const inputs = popupActive.querySelectorAll("input");
         if (inputs.length) {
             for (let i = 0; i < inputs.length; i++) {
-                inputs[i].value = "";
+                if (inputs[i].name !== "csrfmiddlewaretoken") {
+                    inputs[i].value = "";
+                }
             }
         }
         if (doUnlock) {
@@ -448,7 +450,9 @@ function popupClose(popupActive, doUnlock = true) {
     const inputs = popupActive.querySelectorAll("input");
     if (inputs.length) {
         for (let i = 0; i < inputs.length; i++) {
-            inputs[i].value = "";
+            if (inputs[i].name !== "csrfmiddlewaretoken") {
+                inputs[i].value = "";
+            }
         }
     }
     if (doUnlock) {
