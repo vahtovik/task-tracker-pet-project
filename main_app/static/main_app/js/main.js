@@ -17,7 +17,9 @@ function addActiveTask() {
     let taskName = form.task_name.value;
 
     // Проверяем, что текст задачи не пустой
-    checkIfEmpty(taskName);
+    if (isEmpty(taskName)) {
+        return;
+    }
 
     // Отправляем асинхронный запрос на сервер
     fetch("/add-active-task/", {
@@ -114,7 +116,9 @@ function addPendingTask() {
     let taskName = form.task_name.value;
 
     // Проверяем, что текст задачи не пустой
-    checkIfEmpty(taskName);
+    if (isEmpty(taskName)) {
+        return;
+    }
 
     // Отправляем асинхронный запрос на сервер
     fetch("/add-pending-task/", {
@@ -246,7 +250,7 @@ function finishActiveTask() {
                     if (this.hasAttribute("data-item-id")) {
                         const itemId = this.getAttribute("data-item-id");
                         const hiddenInput =
-                            currPopup.querySelector("[name='taskId']");
+                            currPopup.querySelector("[name='task_id']");
                         hiddenInput.value = itemId;
                         hiddenInput.dispatchEvent(new Event("change"));
                     }
@@ -266,7 +270,9 @@ function editPendingTask() {
     let taskName = form.task_name.value;
 
     // Проверяем, что текст задачи не пустой
-    checkIfEmpty(taskName);
+    if (isEmpty(taskName)) {
+        return;
+    }
 
     // Отправляем асинхронный запрос на сервер
     fetch("/edit-pending-task/", {
@@ -356,70 +362,34 @@ function removePendingTask() {
 }
 
 function addCompletedTask() {
+    // Собираем данные формы
     let form = document.getElementById("add__completed__task__popup__form");
-
-    let taskName = form.querySelector(".task__name").value;
+    let formData = new FormData(form);
+    let taskName = form.task_name.value;
+    let taskStart = form.task_start.value;
+    let taskEnd = form.task_end.value;
 
     // Проверяем, что текст задачи не пустой
-    checkIfEmpty(taskName);
-
-    let taskStart = form.querySelector(".task__start").value;
-    let taskEnd = form.querySelector(".task__end").value;
-
-    var timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    if (
-        (timeFormat.test(taskStart) && timeFormat.test(taskEnd)) ||
-        (taskStart === "" && taskEnd === "")
-    ) {
-        if (taskStart === "" && taskEnd === "") {
-            console.log("Правильное время");
-        } else {
-            // Если формат правильный, разбиваем строку на часы и минуты
-            var taskStartSplit = taskStart.split(":");
-            var startHours = parseInt(taskStartSplit[0], 10);
-            var startMinutes = parseInt(taskStartSplit[1], 10);
-
-            // Создаем объект времени с сегодняшней датой и введенным временем
-            var startTimeObj = new Date();
-            startTimeObj.setHours(startHours);
-            startTimeObj.setMinutes(startMinutes);
-
-            var taskEndSplit = taskEnd.split(":");
-            var endHours = parseInt(taskEndSplit[0], 10);
-            var endMinutes = parseInt(taskEndSplit[1], 10);
-
-            // Создаем объект времени с сегодняшней датой и введенным временем
-            var endTimeObj = new Date();
-            endTimeObj.setHours(endHours);
-            endTimeObj.setMinutes(endMinutes);
-
-            if (startTimeObj >= endTimeObj) {
-                alert("Время окончания задачи должно превышать время начала!");
-                return;
-            } else {
-                console.log("Правильное время");
-            }
-        }
-    } else {
-        alert("Неправильный формат времени!");
+    if (isEmpty(taskName)) {
         return;
     }
 
-    // Собираем данные формы
-    let formData = new FormData(form);
-    formData.append("task_name", taskName);
-    formData.append("task_start_time", taskStart);
-    formData.append("task_end_time", taskEnd);
+    // Проверяем корректность времени
+    if (!isTimeCorrect(taskStart, taskEnd)) {
+        return;
+    }
 
     // Отправляем асинхронный запрос на сервер
     fetch("/add-completed-task/", {
-        method: form.method,
+        method: "POST",
         body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
         .then((data) => {
             let taskId = data.task_id;
             let taskStartTime = data.task_start_time;
@@ -516,7 +486,7 @@ function addCompletedTask() {
                         if (this.hasAttribute("data-item-id")) {
                             const itemId = this.getAttribute("data-item-id");
                             const hiddenInput =
-                                currPopup.querySelector("[name='taskId']");
+                                currPopup.querySelector("[name='task_id']");
                             hiddenInput.value = itemId;
                             hiddenInput.dispatchEvent(new Event("change"));
                         }
@@ -550,7 +520,7 @@ function addCompletedTask() {
                         if (this.hasAttribute("data-item-id")) {
                             const itemId = this.getAttribute("data-item-id");
                             const hiddenInput =
-                                currPopup.querySelector("[name='taskId']");
+                                currPopup.querySelector("[name='task_id']");
                             hiddenInput.value = itemId;
                             hiddenInput.dispatchEvent(new Event("change"));
                         }
@@ -562,8 +532,8 @@ function addCompletedTask() {
             let popupId = "add-completed-task-popup";
             let popupActive = document.getElementById(popupId);
             popupActive.querySelector("input[name='task_name']").value = "";
-            popupActive.querySelector("input[name='task__start']").value = "";
-            popupActive.querySelector("input[name='task__end']").value = "";
+            popupActive.querySelector("input[name='task_start']").value = "";
+            popupActive.querySelector("input[name='task_end']").value = "";
             popupClose(popupActive);
         })
         .catch((error) => {
@@ -577,47 +547,15 @@ function editCompletedTask() {
     let taskName = form.querySelector(".task__name").value;
 
     // Проверяем, что текст задачи не пустой
-    checkIfEmpty(taskName);
+    if (isEmpty(taskName)) {
+        return;
+    }
 
-    let taskStart = form.querySelector(".task__start").value;
-    let taskEnd = form.querySelector(".task__end").value;
+    let taskStart = form.querySelector(".task_start").value;
+    let taskEnd = form.querySelector(".task_end").value;
 
-    var timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    if (
-        (timeFormat.test(taskStart) && timeFormat.test(taskEnd)) ||
-        (taskStart === "" && taskEnd === "")
-    ) {
-        if (taskStart === "" && taskEnd === "") {
-            console.log("Правильное время");
-        } else {
-            // Если формат правильный, разбиваем строку на часы и минуты
-            var taskStartSplit = taskStart.split(":");
-            var startHours = parseInt(taskStartSplit[0], 10);
-            var startMinutes = parseInt(taskStartSplit[1], 10);
-
-            // Создаем объект времени с сегодняшней датой и введенным временем
-            var startTimeObj = new Date();
-            startTimeObj.setHours(startHours);
-            startTimeObj.setMinutes(startMinutes);
-
-            var taskEndSplit = taskEnd.split(":");
-            var endHours = parseInt(taskEndSplit[0], 10);
-            var endMinutes = parseInt(taskEndSplit[1], 10);
-
-            // Создаем объект времени с сегодняшней датой и введенным временем
-            var endTimeObj = new Date();
-            endTimeObj.setHours(endHours);
-            endTimeObj.setMinutes(endMinutes);
-
-            if (startTimeObj >= endTimeObj) {
-                alert("Время окончания задачи должно превышать время начала!");
-                return;
-            } else {
-                console.log("Правильное время");
-            }
-        }
-    } else {
-        alert("Неправильный формат времени!");
+    // Проверяем корректность времени
+    if (!isTimeCorrect(taskStart, taskEnd)) {
         return;
     }
 
@@ -746,7 +684,7 @@ function editCompletedTask() {
                                         this.getAttribute("data-item-id");
                                     const hiddenInput =
                                         currPopup.querySelector(
-                                            "[name='taskId']"
+                                            "[name='task_id']"
                                         );
                                     hiddenInput.value = itemId;
                                     hiddenInput.dispatchEvent(

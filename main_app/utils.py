@@ -1,9 +1,4 @@
-from django.utils import timezone
-
-
-def time_to_minutes(time_str):
-    hours, minutes = map(int, time_str.split(':'))
-    return hours * 60 + minutes
+from datetime import datetime
 
 
 def timedelta_to_minutes_and_seconds(td):
@@ -19,10 +14,21 @@ def format_timedelta(td):
 
 
 def get_completed_tasks_total_time(completed_tasks):
-    total_minutes = sum(time_to_minutes(task.task_time_interval) for task in completed_tasks)
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-    return f'{hours} ч {minutes} м' if hours > 0 else f'{minutes} м'
+    total_seconds = sum(
+        (task.completed_task_end_time - task.completed_task_start_time).total_seconds()
+        for task in completed_tasks
+    )
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    return f'{int(hours)} ч {int(minutes)} м' if hours > 0 else f'{int(minutes)} м'
+
+
+def get_today_date_with_specified_time(time):
+    if not time:
+        return None
+    current_date = datetime.now().date()
+    hours, minutes = map(int, time.split(':'))
+    return datetime(current_date.year, current_date.month, current_date.day, hours, minutes)
 
 
 MONTHS = {

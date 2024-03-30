@@ -628,9 +628,44 @@ function makePopupOpen() {
     }
 }
 
-function checkIfEmpty(taskName) {
+function isEmpty(taskName) {
     if (taskName.trim() === "") {
         alert("Введите название задачи");
-        return;
+        return true;
+    }
+}
+
+function isTimeCorrect(startTime, endTime) {
+    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    // Проверяем время на пустоту и соответствие формату
+    if (
+        (timeFormat.test(startTime) && timeFormat.test(endTime)) ||
+        (startTime === "" && endTime === "")
+    ) {
+        if (startTime === "" && endTime === "") {
+            // Если время пустое
+            return true;
+        } else {
+            // Если время непустое и соотвествует формату
+            // Разбиваем время на часы и минуты
+            const [startHours, startMinutes] = startTime.split(":").map(Number);
+            const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+            // Проверяем, что endTime больше startTime
+            if (
+                startHours > endHours ||
+                (startHours === endHours && startMinutes >= endMinutes)
+            ) {
+                alert("Время окончания задачи должно превышать время начала!");
+                return false;
+            } else {
+                console.log("Правильное время");
+                return true;
+            }
+        }
+    } else {
+        alert("Неправильный формат времени!");
+        return false;
     }
 }

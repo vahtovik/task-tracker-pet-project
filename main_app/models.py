@@ -43,5 +43,7 @@ class TaskList(models.Model):
         return local_time.strftime('%H:%M')
 
     def get_completed_task_time_difference(self):
-        time_difference = self.completed_task_end_time - self.completed_task_start_time
-        return timedelta_to_minutes_and_seconds(time_difference)
+        total_seconds = (self.completed_task_end_time - self.completed_task_start_time).total_seconds()
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        return f'{int(hours)} ч {int(minutes)} м' if hours > 0 else f'{int(minutes)} м'

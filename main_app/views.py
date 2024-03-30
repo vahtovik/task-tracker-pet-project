@@ -1,9 +1,7 @@
 import json
 from datetime import datetime
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-from django.db.models import Max
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -13,7 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import time_to_minutes, format_timedelta, get_completed_tasks_total_time, MONTHS
+from .utils import format_timedelta, get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time
 
 
 @require_GET
@@ -146,54 +144,38 @@ def remove_pending_task(request):
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def add_completed_task(request):
-    if request.method == 'POST':
-        user = request.user
-        task_name = request.POST.get('task_name')
-        # task_start_time = request.POST.get('task_start_time')
-        task_start_time = request.POST.get('task_start_time')
-        task_end_time = request.POST.get('task_end_time')
-        if not task_start_time or not task_end_time:
-            start_time_obj, end_time_obj = None, None
-        else:
-            today = timezone.now().date()
-            start_hours, start_minutes = map(int, task_start_time.split(':'))
-            end_hours, end_minutes = map(int, task_end_time.split(':'))
-            start_time_obj = datetime(today.year, today.month, today.day, start_hours, start_minutes)
-            end_time_obj = datetime(today.year, today.month, today.day, end_hours, end_minutes)
-        try:
-            new_task = TaskList.objects.create(
-                user=user,
-                task_name=task_name,
-                is_completed=True,
-            )
-            task_duration = None
-            if start_time_obj is not None and end_time_obj is not None:
-                new_task.task_current_time = start_time_obj
-                new_task.completed_task_start_time = end_time_obj
-                new_task.completed_task_end_time = end_time_obj
+    user = request.user
+    task_name = request.POST.get('task_name')
+    task_start_time = request.POST.get('task_start')
+    task_end_time = request.POST.get('task_end')
+    try:
+        new_task = TaskList.objects.create(
+            user=user,
+            task_name=task_name,
+            is_completed=True,
+            completed_task_start_time=get_today_date_with_specified_time(task_start_time),
+            completed_task_end_time=get_today_date_with_specified_time(task_end_time),
+        )
 
-                time_difference = end_time_obj - start_time_obj
-                hours = time_difference.seconds // 3600
-                minutes = (time_difference.seconds % 3600) // 60
-                formatted_time_difference = '{:02}:{:02}'.format(hours, minutes)
-                new_task.task_time_interval = formatted_time_difference
-                task_duration = (new_task.completed_task_end_time - new_task.task_current_time).seconds // 60
-                new_task.save()
-            return JsonResponse({
-                'success': True,
-                'task_id': new_task.pk,
-                # 'task_start_time': new_task.task_current_time,
-                'task_start_time': new_task.creation_time,
-                'task_end_time': new_task.completed_task_end_time,
-                'task_duration': task_duration,
-            })
-        except IntegrityError as e:
-            return JsonResponse({'success': False, 'errors': str(e)}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'errors': 'Error in task creating'}, status=400)
+        if task_start_time and task_end_time:
+            task_duration = (new_task.completed_task_end_time - new_task.completed_task_start_time).seconds // 60
+        else:
+            task_duration = None
+
+        return JsonResponse({
+            'success': True,
+            'task_id': new_task.pk,
+            'task_start_time': new_task.completed_task_start_time,
+            'task_end_time': new_task.completed_task_end_time,
+            'task_duration': task_duration,
+        })
+    except IntegrityError as e:
+        return JsonResponse({'success': False, 'errors': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'errors': 'Error in task creating'}, status=400)
 
 
 @login_required
