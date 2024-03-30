@@ -19,7 +19,7 @@ addEventListener("DOMContentLoaded", () => {
                 if (this.hasAttribute("data-item-id")) {
                     const itemId = this.getAttribute("data-item-id");
                     const hiddenInput =
-                        currPopup.querySelector("[name='taskId']");
+                        currPopup.querySelector("[name='task_id']");
                     hiddenInput.value = itemId;
                     hiddenInput.dispatchEvent(new Event("change"));
                 }
@@ -59,7 +59,7 @@ addEventListener("DOMContentLoaded", () => {
 
     function popupClose(popupActive, doUnlock = true) {
         popupActive.classList.remove("open");
-        const hiddenInput = popupActive.querySelector("[name='taskId']");
+        const hiddenInput = popupActive.querySelector("[name='task_id']");
         hiddenInput.value = "";
         hiddenInput.dispatchEvent(new Event("change"));
         const inputs = popupActive.querySelectorAll("input");
@@ -270,7 +270,7 @@ addEventListener("DOMContentLoaded", () => {
     // Function to calculate time difference and update the display
     function calculateTimeDifference(e) {
         let startTimeInput, endTimeInput;
-        if (e.target.getAttribute("name") == "task__start") {
+        if (e.target.getAttribute("name") == "task_start") {
             startTimeInput = e.target;
             endTimeInput = e.target.nextElementSibling.nextElementSibling;
         } else {
@@ -334,8 +334,8 @@ addEventListener("DOMContentLoaded", () => {
     }
 
     for (const block of timeRangeBlocks) {
-        startTimeInput = block.querySelector('input[name="task__start"]');
-        endTimeInput = block.querySelector('input[name="task__end"]');
+        startTimeInput = block.querySelector('input[name="task_start"]');
+        endTimeInput = block.querySelector('input[name="task_end"]');
         timeDifferenceDiv = block.querySelector(".popup__form-range__time");
         if (startTimeInput && endTimeInput && timeDifferenceDiv) {
             startTimeInput.addEventListener("input", calculateTimeDifference);
@@ -348,13 +348,13 @@ addEventListener("DOMContentLoaded", () => {
     /* INPUT VALIDATION SECTION ENDS */
 
     /* PUT ALL OF THE DATA TO POPUP STARTS */
-    const hiddenInputs = document.querySelectorAll("[name='taskId']");
+    const hiddenInputs = document.querySelectorAll("[name='task_id']");
     function getPopupData(e) {
         const taskId = e.target.value;
         const popup = this.closest(".popup");
         const popupInputTaskName = popup.querySelector(".task__name");
-        const popupInputTaskStart = popup.querySelector("[name='task__start']");
-        const popupInputTaskEnd = popup.querySelector("[name='task__end']");
+        const popupInputTaskStart = popup.querySelector("[name='task_start']");
+        const popupInputTaskEnd = popup.querySelector("[name='task_end']");
         const popupDay = popup.querySelector(".popup__form-day p");
 
         /* VSE LI POPUPS S TAKIM CLASSOM ??????? KAJETSYA DA */
@@ -443,7 +443,7 @@ function popupOpen(currentPopup) {
 
 function popupClose(popupActive, doUnlock = true) {
     popupActive.classList.remove("open");
-    // const hiddenInput = popupActive.querySelector("[name='taskId']")
+    // const hiddenInput = popupActive.querySelector("[name='task_id']")
     // hiddenInput.value = ""
     const inputs = popupActive.querySelectorAll("input");
     if (inputs.length) {
@@ -463,7 +463,7 @@ function bindTaskWithPopup(e) {
 
     if (this.hasAttribute("data-item-id")) {
         const itemId = this.getAttribute("data-item-id");
-        const hiddenInput = currPopup.querySelector("[name='taskId']");
+        const hiddenInput = currPopup.querySelector("[name='task_id']");
         hiddenInput.value = itemId;
         hiddenInput.dispatchEvent(new Event("change"));
     }
@@ -617,7 +617,7 @@ function makePopupOpen() {
                 if (this.hasAttribute("data-item-id")) {
                     const itemId = this.getAttribute("data-item-id");
                     const hiddenInput =
-                        currPopup.querySelector("[name='taskId']");
+                        currPopup.querySelector("[name='task_id']");
                     hiddenInput.value = itemId;
                     hiddenInput.dispatchEvent(new Event("change"));
                 }

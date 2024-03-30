@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import timezone
 
 
 def timedelta_to_minutes_and_seconds(td):
@@ -28,7 +29,8 @@ def get_today_date_with_specified_time(time):
         return None
     current_date = datetime.now().date()
     hours, minutes = map(int, time.split(':'))
-    return datetime(current_date.year, current_date.month, current_date.day, hours, minutes)
+    return timezone.make_aware(datetime(current_date.year, current_date.month, current_date.day, hours, minutes),
+                               timezone.get_current_timezone())
 
 
 MONTHS = {

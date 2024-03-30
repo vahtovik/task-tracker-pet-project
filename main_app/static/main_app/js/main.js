@@ -542,38 +542,34 @@ function addCompletedTask() {
 }
 
 function editCompletedTask() {
+    // Собираем данные формы
     let form = document.getElementById("edit__completed__task__popup__form");
-
-    let taskName = form.querySelector(".task__name").value;
+    let formData = new FormData(form);
+    let taskName = form.task_name.value;
+    let taskStart = form.task_start.value;
+    let taskEnd = form.task_end.value;
 
     // Проверяем, что текст задачи не пустой
     if (isEmpty(taskName)) {
         return;
     }
 
-    let taskStart = form.querySelector(".task_start").value;
-    let taskEnd = form.querySelector(".task_end").value;
-
     // Проверяем корректность времени
     if (!isTimeCorrect(taskStart, taskEnd)) {
         return;
     }
 
-    // Собираем данные формы
-    let formData = new FormData(form);
-    formData.append("task_name", taskName);
-    formData.append("task_start_time", taskStart);
-    formData.append("task_end_time", taskEnd);
-
     // Отправляем асинхронный запрос на сервер
     fetch("/edit-completed-task/", {
-        method: form.method,
+        method: "POST",
         body: formData,
-        headers: {
-            // 'X-CSRFToken': '{{ csrf_token }}'
-        },
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
         .then((data) => {
             let task_id = data.task_id;
             let start_time = data.start_time;

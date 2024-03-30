@@ -207,13 +207,13 @@
                 {% csrf_token %}
                 <input type="hidden" name="task_id" value="">
                 <div class="popup__content-item popup__form-input">
-                    <input type="text" class="input task__name">
+                    <input type="text" class="input task__name" name="task_name">
                 </div>
                 <div class="popup__content-item popup__form-range">
                     <div class="popup__form-range__inputs">
-                        <input type="text" class="input task__start" name="task__start">
+                        <input type="text" class="input task__start" name="task_start">
                         <span>-</span>
-                        <input type="text" class="input task__end" name="task__end">
+                        <input type="text" class="input task__end" name="task_end">
                     </div>
                     <div class="popup__form-range__time"></div>
                 </div>

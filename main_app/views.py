@@ -178,47 +178,35 @@ def add_completed_task(request):
         return JsonResponse({'success': False, 'errors': 'Error in task creating'}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def edit_completed_task(request):
-    pk = request.POST.get('taskId')
+    pk = request.POST.get('task_id')
     if pk:
+        task_name = request.POST.get('task_name')
+        task_start_time = request.POST.get('task_start')
+        task_end_time = request.POST.get('task_end')
         try:
             task = TaskList.objects.get(pk=pk)
-            task.task_name = request.POST.get('task_name')
-            today_date = datetime.now().date()
-            # task_start_time = request.POST.get('task_start_time')
-            creation_time = request.POST.get('task_start_time')
-            task_end_time = request.POST.get('task_end_time')
-            if creation_time and task_end_time:
-                start_hours, start_minutes = map(int, task_start_time.split(':'))
-                end_hours, end_minutes = map(int, task_end_time.split(':'))
-                start_time = datetime(today_date.year, today_date.month, today_date.day, start_hours, start_minutes)
-                end_time = datetime(today_date.year, today_date.month, today_date.day, end_hours, end_minutes)
-                task.completed_task_start_time = start_time
-                task.completed_task_end_time = end_time
-                task.task_time_interval = format_timedelta(end_time - start_time)
-                # нужно добавить корректное значение в поле
-                task.task_current_time = start_time
-                # task_duration = (task.completed_task_end_time - task.completed_task_start_time).seconds // 60
-                task_duration = (task.completed_task_end_time - task.task_current_time).seconds // 60
-            else:
-                task.completed_task_start_time = None
-                task.completed_task_end_time = None
-                task.task_time_interval = None
-                task_duration = None
-
+            task.task_name = task_name
+            task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
+            task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
             task.save()
-            return JsonResponse({
-                'success': True,
-                'task_id': pk,
-                # 'start_time': task_start_time,
-                'start_time': creation_time,
-                'end_time': task_end_time,
-                'task_duration': task_duration,
-            })
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+
+        if task_start_time and task_end_time:
+            task_duration = (task.completed_task_end_time - task.completed_task_start_time).seconds // 60
+        else:
+            task_duration = None
+
+        return JsonResponse({
+            'success': True,
+            'task_id': pk,
+            'start_time': task.completed_task_start_time,
+            'end_time': task.completed_task_end_time,
+            'task_duration': task_duration,
+        })
     else:
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
