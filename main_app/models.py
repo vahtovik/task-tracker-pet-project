@@ -23,7 +23,10 @@ class TaskList(models.Model):
         return self.task_name
 
     def get_active_task_start_time(self):
-        local_time = timezone.localtime(self.creation_time, timezone=timezone.get_current_timezone())
+        if not self.task_current_time:
+            self.task_current_time = timezone.now()
+            self.save()
+        local_time = timezone.localtime(self.task_current_time, timezone=timezone.get_current_timezone())
         return local_time.strftime('%H:%M')
 
     @staticmethod

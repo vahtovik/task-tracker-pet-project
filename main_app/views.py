@@ -64,7 +64,6 @@ def add_active_task(request):
             task = form.save(commit=False)
             task.user = request.user
             task.is_active = True
-            task.task_current_time = timezone.now()
             task.save()
             start = datetime.now().strftime('%H:%M')
             return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
@@ -226,6 +225,29 @@ def delete_completed_task(request):
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
 
+@require_POST
+@login_required
+def make_pending_task_active(request):
+    body_unicode = request.body.decode('utf-8')
+    pk = json.loads(body_unicode).get('itemId')
+    if pk:
+        try:
+            task = TaskList.objects.get(pk=pk)
+            task.is_active = True
+            task_name = task.task_name
+            task.save()
+            return JsonResponse({
+                'success': True,
+                'task_name': task_name,
+                'task_id': pk,
+                'start': datetime.now().strftime('%H:%M'),
+            })
+        except TaskList.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+
+
 @login_required
 @csrf_exempt
 def change_pending_tasks_order(request):
@@ -242,25 +264,6 @@ def change_pending_tasks_order(request):
         return JsonResponse({'message': 'Success'})  # Ответ в формате JSON
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-@login_required
-@csrf_exempt
-def make_pending_task_active(request):
-    body_unicode = request.body.decode('utf-8')
-    pk = json.loads(body_unicode).get('item_id')
-    if pk:
-        task = TaskList.objects.get(pk=pk)
-        task.is_active = True
-        task_name = task.task_name
-        task.task_current_time = timezone.now()
-        task.save()
-        return JsonResponse({
-            'success': True,
-            'task_name': task_name,
-            'task_id': pk,
-            'start': datetime.now().strftime('%H:%M'),
-        })
 
 
 @login_required

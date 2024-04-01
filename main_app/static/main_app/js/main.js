@@ -747,55 +747,23 @@ function deleteCompletedTask() {
         });
 }
 
-function editCredentials() {
-    let form = document.getElementById("edit__credentials__popup__form");
-    let login = form.querySelector(".login").value;
-    let password = form.querySelector(".password").value;
-
-    if (login.trim() === "" || password.trim() === "") {
-        alert("Введите логин и пароль");
-        return;
-    }
-
-    console.log("work");
-
-    let formData = new FormData(form);
-    formData.append("login", login);
-    formData.append("password", password);
-
-    fetch("/edit-credentials/", {
-        method: form.method,
-        body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Ошибка сети");
-            }
-        })
-        .then((data) => {
-            window.location.pathname = "/logout/";
-        })
-        .catch((error) => {
-            console.error("Произошла ошибка:", error);
-        });
-}
-
 function makePendingTaskActive(e) {
+    // Предотвращаем появление попапа с редактированием задачи
     e.stopPropagation();
-
+    
+    // Получаем id задачи
     let icon = e.target;
-    let item_id = icon.closest("a").getAttribute("data-item-id");
+    let itemId = icon.closest("a").getAttribute("data-item-id");
 
-    console.log(item_id);
+    // Получаем из cookie значение csrftoken
+    const csrftoken = getCookie('csrftoken');
 
     fetch("/make-pending-task-active/", {
         method: "POST",
-        body: JSON.stringify({ item_id }),
+        body: JSON.stringify({ itemId }),
         headers: {
             "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
         },
     })
         .then((response) => {
@@ -805,8 +773,6 @@ function makePendingTaskActive(e) {
             return response.json();
         })
         .then((data) => {
-            console.log("rabotaet");
-
             let taskId = data.task_id;
             let start = data.start;
             let taskName = data.task_name;
@@ -870,6 +836,42 @@ function makePendingTaskActive(e) {
             let timerDiv = activeTask.querySelector(".list__item__spendtime p");
             // Стартуем секундомер для новой задачи
             startTimer(timerDiv);
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+}
+
+function editCredentials() {
+    let form = document.getElementById("edit__credentials__popup__form");
+    let login = form.querySelector(".login").value;
+    let password = form.querySelector(".password").value;
+
+    if (login.trim() === "" || password.trim() === "") {
+        alert("Введите логин и пароль");
+        return;
+    }
+
+    console.log("work");
+
+    let formData = new FormData(form);
+    formData.append("login", login);
+    formData.append("password", password);
+
+    fetch("/edit-credentials/", {
+        method: form.method,
+        body: formData,
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+        },
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+        })
+        .then((data) => {
+            window.location.pathname = "/logout/";
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);
