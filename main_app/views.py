@@ -131,7 +131,7 @@ def edit_pending_task(request):
 @require_POST
 @login_required
 def remove_pending_task(request):
-    pk = request.POST.get('taskId')
+    pk = request.POST.get('task_id')
     if pk:
         try:
             task = TaskList.objects.get(pk=pk)
@@ -248,22 +248,18 @@ def make_pending_task_active(request):
         return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def change_pending_tasks_order(request):
-    if request.method == 'POST':
-        body_unicode = request.body.decode('utf-8')
-        id_list = json.loads(body_unicode).get('idList')
-        for item in id_list:
-            pk = item['id']
-            order = item['orderNum']
-            task = TaskList.objects.get(pk=pk)
-            task.order = order
-            task.save()
+    body_unicode = request.body.decode('utf-8')
+    id_list = json.loads(body_unicode).get('idList')
+    for item in id_list:
+        pk, order = item['id'], item['orderNum']
+        task = TaskList.objects.get(pk=pk)
+        task.order = order
+        task.save()
 
-        return JsonResponse({'message': 'Success'})  # Ответ в формате JSON
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    return JsonResponse({'success': True})
 
 
 @login_required

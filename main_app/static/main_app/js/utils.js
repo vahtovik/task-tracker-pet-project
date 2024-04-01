@@ -107,13 +107,15 @@ addEventListener("DOMContentLoaded", () => {
                 // }
             }
 
-            const requestBody = JSON.stringify({ idList });
+            // Получаем из cookie значение csrftoken
+            const csrftoken = getCookie("csrftoken");
 
             fetch("/change-pending-tasks-order/", {
                 method: "POST",
-                body: requestBody,
+                body: JSON.stringify({ idList }),
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
                 },
             })
                 .then((response) => response.json())

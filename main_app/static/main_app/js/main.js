@@ -763,7 +763,7 @@ function makePendingTaskActive(e) {
         body: JSON.stringify({ itemId }),
         headers: {
             "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken
+            "X-CSRFToken": csrftoken,
         },
     })
         .then((response) => {
