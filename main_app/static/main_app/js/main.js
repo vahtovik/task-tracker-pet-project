@@ -750,13 +750,13 @@ function deleteCompletedTask() {
 function makePendingTaskActive(e) {
     // Предотвращаем появление попапа с редактированием задачи
     e.stopPropagation();
-    
+
     // Получаем id задачи
     let icon = e.target;
     let itemId = icon.closest("a").getAttribute("data-item-id");
 
     // Получаем из cookie значение csrftoken
-    const csrftoken = getCookie('csrftoken');
+    const csrftoken = getCookie("csrftoken");
 
     fetch("/make-pending-task-active/", {
         method: "POST",
@@ -843,35 +843,61 @@ function makePendingTaskActive(e) {
 }
 
 function editCredentials() {
+    // Собираем данные формы
     let form = document.getElementById("edit__credentials__popup__form");
-    let login = form.querySelector(".login").value;
-    let password = form.querySelector(".password").value;
+    let formData = new FormData(form);
+    let username = form.username.value;
+    let newPassword1 = form.new_password1.value;
+    let newPassword2 = form.new_password2.value;
 
-    if (login.trim() === "" || password.trim() === "") {
-        alert("Введите логин и пароль");
+    // Проверяем, что логин и пароли не пустые
+    if (!username && !newPassword1 && !newPassword2) {
         return;
     }
 
-    console.log("work");
-
-    let formData = new FormData(form);
-    formData.append("login", login);
-    formData.append("password", password);
+    // Проверяем, есть ли в попапе уже сообщения об ошибках
+    let errorInput = form.querySelector("input.error");
+    if (errorInput) {
+        return;
+    }
 
     fetch("/edit-credentials/", {
-        method: form.method,
+        method: "POST",
         body: formData,
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}",
-        },
     })
         .then((response) => {
             if (!response.ok) {
                 throw new Error("Ошибка сети");
             }
+            return response.json();
         })
         .then((data) => {
-            window.location.pathname = "/logout/";
+            if (data.success) {
+                window.location.pathname = "/login/";
+            } else {
+                for (const field in data.errors) {
+                    if (data.errors[field]) {
+                        let ulErrorBlock = document.createElement("ul");
+                        ulErrorBlock.className = "profile__edit__errors";
+
+                        let divErrorBlock = document.createElement("div");
+                        divErrorBlock.id = field + "__error";
+                        divErrorBlock.innerText = data.errors[field];
+
+                        ulErrorBlock.appendChild(divErrorBlock);
+
+                        let inputElement = form.querySelector(
+                            `input[name="${field}"]`
+                        );
+                        inputElement.classList.add("error");
+
+                        inputElement.parentNode.insertAdjacentElement(
+                            "afterend",
+                            ulErrorBlock
+                        );
+                    }
+                }
+            }
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);

@@ -196,6 +196,41 @@
     </div>
 </div>
 
+<div class="popup" id="add-completed-task-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Добавление выполненной задачи</h3>
+            </div>
+            <form method="post" class="popup__form" id="add__completed__task__popup__form">
+                {% csrf_token %}
+                <input type="hidden" name="task_id" value="">
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input task__name" name="task_name">
+                </div>
+                <div class="popup__content-item popup__form-range">
+                    <div class="popup__form-range__inputs">
+                        <input type="text" class="input task__start" name="task_start">
+                        <span>-</span>
+                        <input type="text" class="input task__end" name="task_end">
+                    </div>
+                    <div class="popup__form-range__time"></div>
+                </div>
+                <div class="popup__content-item popup__form-day">
+                    <i class="_icon-calendar-date"></i>
+                    <p>{{ month_day }} {{ month }}</p>
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="addCompletedTask()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="popup" id="edit-completed-task-popup">
     <div class="popup__body">
         <div class="popup__content">
@@ -234,41 +269,6 @@
     </div>
 </div>
 
-<div class="popup" id="add-completed-task-popup">
-    <div class="popup__body">
-        <div class="popup__content">
-            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
-            <div class="popup__title">
-                <h3>Добавление выполненной задачи</h3>
-            </div>
-            <form method="post" class="popup__form" id="add__completed__task__popup__form">
-                {% csrf_token %}
-                <input type="hidden" name="task_id" value="">
-                <div class="popup__content-item popup__form-input">
-                    <input type="text" class="input task__name" name="task_name">
-                </div>
-                <div class="popup__content-item popup__form-range">
-                    <div class="popup__form-range__inputs">
-                        <input type="text" class="input task__start" name="task_start">
-                        <span>-</span>
-                        <input type="text" class="input task__end" name="task_end">
-                    </div>
-                    <div class="popup__form-range__time"></div>
-                </div>
-                <div class="popup__content-item popup__form-day">
-                    <i class="_icon-calendar-date"></i>
-                    <p>{{ month_day }} {{ month }}</p>
-                </div>
-                <div class="popup__content-item popup__form-btns">
-                    <button type="button" class="btn btn-white" onclick="addCompletedTask()">
-                        <i class="_icon-save"></i>Сохранить
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <div class="popup" id="profile-edit-popup">
     <div class="popup__body">
         <div class="popup__content">
@@ -276,14 +276,25 @@
             <div class="popup__title">
                 <h3>Редактирование профиля</h3>
             </div>
-            <form method="post" class="popup__form" id="edit__credentials__popup__form">
+            <form method="post" action="/edit-credentials/" class="popup__form" id="edit__credentials__popup__form">
                 {% csrf_token %}
+                {% for field in form %}
                 <div class="popup__content-item popup__form-input">
-                    <input type="text" class="input login">
+                    <input type="{{ field.field.widget.input_type }}"
+                           name="{{ field.name }}"
+                           class="input auth__input {% if field.errors %}error{% endif %}"
+                           placeholder="{{ field.field.widget.attrs.placeholder }}">
                 </div>
-                <div class="popup__content-item popup__form-input">
-                    <input type="password" class="input password">
-                </div>
+                {% if field.errors %}
+                <ul class="profile__edit__errors">
+                    {% for error in field.errors %}
+                    <div id="{{ field.name }}__error">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endfor %}
                 <div class="popup__content-item popup__form-btns">
                     <button type="button" class="btn btn-white" onclick="editCredentials()">
                         <i class="_icon-save"></i>Сохранить

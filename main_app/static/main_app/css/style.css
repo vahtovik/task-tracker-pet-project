@@ -241,7 +241,7 @@ button {
   color: #fff;
 }
 
-.input:focus {
+.input:not(.error):focus {
   outline: 1px solid #547cfb;
 }
 
@@ -269,11 +269,11 @@ button {
   color: transparent;
 }
 
-.input:focus:hover {
+.input:not(.error):focus:hover {
   outline: 1px solid #547cfb;
 }
 
-.input:hover {
+.input:not(.error):hover {
   outline: 1px solid #4d4d4d;
 }
 
@@ -365,7 +365,7 @@ button {
   background-color: #2d2d2d;
 }
 
-.popup__content input:hover {
+.popup__content input:not(.error):hover {
   border-color: #474747;
 }
 
@@ -760,5 +760,10 @@ button {
 
 .errorlist {
   margin-top: 5px;
+  color: red;
+}
+
+.profile__edit__errors {
+  margin-bottom: 10px;
   color: red;
 }

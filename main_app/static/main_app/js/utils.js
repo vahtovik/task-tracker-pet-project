@@ -59,9 +59,6 @@ addEventListener("DOMContentLoaded", () => {
 
     function popupClose(popupActive, doUnlock = true) {
         popupActive.classList.remove("open");
-        const hiddenInput = popupActive.querySelector("[name='task_id']");
-        hiddenInput.value = "";
-        hiddenInput.dispatchEvent(new Event("change"));
         const inputs = popupActive.querySelectorAll("input");
         if (inputs.length) {
             for (let i = 0; i < inputs.length; i++) {
@@ -70,6 +67,28 @@ addEventListener("DOMContentLoaded", () => {
                 }
             }
         }
+
+        if (popupActive.id === "profile-edit-popup") {
+            let form = document.getElementById(
+                "edit__credentials__popup__form"
+            );
+
+            let errorInputs = form.querySelectorAll("input.error");
+            errorInputs.forEach(function (input) {
+                input.classList.remove("error");
+            });
+
+            let ulsInsideForm = form.getElementsByTagName("ul");
+            for (let i = 0; i < ulsInsideForm.length; i++) {
+                let ul = ulsInsideForm[i];
+                ul.parentNode.removeChild(ul);
+            }
+        } else {
+            const hiddenInput = popupActive.querySelector("[name='task_id']");
+            hiddenInput.value = "";
+            hiddenInput.dispatchEvent(new Event("change"));
+        }
+
         if (doUnlock) {
             // bodyUnlock()
         }

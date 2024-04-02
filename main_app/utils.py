@@ -1,6 +1,8 @@
 from datetime import datetime
 from django.utils import timezone
 
+today = timezone.now()
+
 
 def timedelta_to_minutes_and_seconds(td):
     minutes = td.seconds // 60

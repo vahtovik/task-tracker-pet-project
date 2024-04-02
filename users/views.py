@@ -1,8 +1,10 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_POST
 
-from users.forms import LoginUserForm, RegisterUserForm
+from users.forms import LoginUserForm, RegisterUserForm, ChangeLoginAndPasswordForm
 
 
 def register_user(request):
@@ -41,17 +43,23 @@ def logout_user(request):
     return redirect('users:login')
 
 
+@require_POST
+@login_required
 def edit_credentials(request):
-    if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
-        form = LoginUserForm(data={'username': login, 'password': password})
-        if form.is_valid():
-            user = request.user
-            user.username = login
-            user.set_password(password)
-            user.save()
-            logout(request)
-            return redirect('users:login')
-        else:
-            return JsonResponse({'success': False, 'error': 'Form validation error'}, status=400)
+    form = ChangeLoginAndPasswordForm(request.POST)
+    if form.is_valid():
+        user = request.user
+        username = form.cleaned_data['username']
+        new_password = form.cleaned_data['new_password1']
+        if username:
+            user.username = username
+        if new_password:
+            user.set_password(new_password)
+            # Сохраняем сессию после смены пароля
+            update_session_auth_hash(request, user)
+        user.save()
+        logout(request)
+        return JsonResponse({'success': True})
+    else:
+        errors = {field: form.errors[field][0] for field in form.errors}
+        return JsonResponse({'success': False, 'errors': errors})

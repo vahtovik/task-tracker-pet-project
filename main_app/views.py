@@ -9,17 +9,15 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
+from users.forms import ChangeLoginAndPasswordForm
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import format_timedelta, get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time
+from .utils import format_timedelta, get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time, today
 
 
 @require_GET
 @login_required
 def index(request):
-    form = TaskListForm()
-    today = timezone.now().date()
-
     # Получаем активную задачу на таймере
     active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
 
@@ -30,7 +28,7 @@ def index(request):
     completed_tasks_with_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
-        completed_task_start_time__date=today
+        completed_task_start_time__date=today.date()
     ).order_by('-completed_task_start_time')
 
     # Вычисляем суммарное время выполненных задач с временными интервалами
@@ -42,15 +40,19 @@ def index(request):
         is_completed=True,
         completed_task_start_time__date=None,
     )
+
+    # Форма смены логина и пароля
+    form = ChangeLoginAndPasswordForm(request.POST)
+
     return render(request, 'main_app/index.html', {
-        'form': form,
         'active_task': active_task,
         'pending_tasks': pending_tasks,
         'completed_tasks_with_time': completed_tasks_with_time,
         'completed_tasks_total_time': completed_tasks_total_time,
         'completed_tasks_no_time': completed_tasks_no_time,
-        'month_day': today.day,
-        'month': MONTHS.get(today.month),
+        'month_day': today.date().day,
+        'month': MONTHS.get(today.date().month),
+        'form': form,
     })
 
 
