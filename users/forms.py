@@ -45,24 +45,29 @@ class ChangeLoginAndPasswordForm(forms.Form):
                 raise forms.ValidationError('Пользователь с таким именем уже существует')
         return username
 
+    def clean_new_password2(self):
+        new_password1 = self.cleaned_data.get('new_password1')
+        new_password2 = self.cleaned_data.get('new_password2')
+        if new_password2:
+            try:
+                password_validation.validate_password(new_password2)
+            except forms.ValidationError as error:
+                self.add_error('new_password1', ' ')
+                self.cleaned_data['new_password1'] = new_password1
+                raise forms.ValidationError(error)
+
+        return new_password2
+
     def clean(self):
         cleaned_data = super().clean()
         new_password1 = cleaned_data.get('new_password1')
         new_password2 = cleaned_data.get('new_password2')
-        if new_password1 != new_password2:
-            raise forms.ValidationError('Пароли не совпадают')
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                self.add_error('new_password1', ' ')
+
+        if (new_password1 and not new_password2) or (not new_password1 and new_password2):
+            self.add_error('new_password1', ' ')
+            self.add_error('new_password2', 'Необходимо заполнить оба поля пароля')
+
         return cleaned_data
-
-    def clean_new_password2(self):
-        password1 = self.cleaned_data.get('new_password1')
-        password2 = self.cleaned_data.get('new_password2')
-        if password1 and password2:
-            if password1 != password2:
-                self.add_error('new_password1', '')
-                raise forms.ValidationError('Пароли не совпадают', code='password_mismatch')
-            try:
-                password_validation.validate_password(password2)
-            except forms.ValidationError as error:
-                self.add_error('new_password2', error)
-
-        return password2

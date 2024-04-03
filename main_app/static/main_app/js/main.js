@@ -855,12 +855,6 @@ function editCredentials() {
         return;
     }
 
-    // Проверяем, есть ли в попапе уже сообщения об ошибках
-    let errorInput = form.querySelector("input.error");
-    if (errorInput) {
-        return;
-    }
-
     fetch("/edit-credentials/", {
         method: "POST",
         body: formData,
@@ -875,8 +869,26 @@ function editCredentials() {
             if (data.success) {
                 window.location.pathname = "/login/";
             } else {
+                // Ищем все теги ul в форме
+                let ulElements = form.getElementsByTagName("ul");
+
+                // Проходимся по всем найденным элементам ul и удаляем их
+                while (ulElements.length > 0) {
+                    ulElements[0].parentNode.removeChild(ulElements[0]);
+                    ulElements = form.getElementsByTagName("ul");
+                }
+
+                // Проходимся по каждой ошибке
                 for (const field in data.errors) {
-                    if (data.errors[field]) {
+                    // Проверяем, что сообщение об ошибке не пустое
+                    if (data.errors[field] !== " ") {
+                        let inputElement = form.querySelector(
+                            `input[name="${field}"]`
+                        );
+                        if (inputElement) {
+                            inputElement.classList.add("error");
+                        }
+
                         let ulErrorBlock = document.createElement("ul");
                         ulErrorBlock.className = "profile__edit__errors";
 
@@ -886,11 +898,7 @@ function editCredentials() {
 
                         ulErrorBlock.appendChild(divErrorBlock);
 
-                        let inputElement = form.querySelector(
-                            `input[name="${field}"]`
-                        );
-                        inputElement.classList.add("error");
-
+                        // Добавляем блок с ошибкой после соответствующего div
                         inputElement.parentNode.insertAdjacentElement(
                             "afterend",
                             ulErrorBlock

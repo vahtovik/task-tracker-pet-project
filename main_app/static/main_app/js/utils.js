@@ -78,10 +78,12 @@ addEventListener("DOMContentLoaded", () => {
                 input.classList.remove("error");
             });
 
-            let ulsInsideForm = form.getElementsByTagName("ul");
-            for (let i = 0; i < ulsInsideForm.length; i++) {
-                let ul = ulsInsideForm[i];
-                ul.parentNode.removeChild(ul);
+            let ulElements = form.getElementsByTagName("ul");
+
+            // Проходимся по всем найденным элементам <ul> и удаляем их
+            while (ulElements.length > 0) {
+                ulElements[0].parentNode.removeChild(ulElements[0]);
+                ulElements = form.getElementsByTagName("ul");
             }
         } else {
             const hiddenInput = popupActive.querySelector("[name='task_id']");
