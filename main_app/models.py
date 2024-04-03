@@ -22,6 +22,10 @@ class TaskList(models.Model):
     def __str__(self):
         return self.task_name
 
+    class Meta:
+        verbose_name = 'Список задач'
+        verbose_name_plural = 'Список задач'
+
     def get_active_task_start_time(self):
         if not self.task_current_time:
             self.task_current_time = timezone.now()
