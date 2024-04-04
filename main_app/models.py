@@ -15,9 +15,8 @@ class TaskList(models.Model):
     is_active = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
     order = models.IntegerField(default=100000)
-    completed_task_start_time = models.DateTimeField(null=True)
-    completed_task_end_time = models.DateTimeField(null=True)
-    task_time_interval = models.CharField(max_length=255, null=True)
+    completed_task_start_time = models.DateTimeField(null=True, blank=True)
+    completed_task_end_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.task_name

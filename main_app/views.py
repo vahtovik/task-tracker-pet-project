@@ -5,14 +5,13 @@ from django.db import IntegrityError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from users.forms import ChangeLoginAndPasswordForm
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import format_timedelta, get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time, today
+from .utils import get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time, today, parse_date, \
+    date_to_day_month_weekday
 
 
 @require_GET
@@ -38,7 +37,8 @@ def index(request):
     completed_tasks_no_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
-        completed_task_start_time__date=None,
+        creation_time__date=today.date(),
+        completed_task_start_time__isnull=True
     )
 
     # Форма смены логина и пароля
@@ -100,8 +100,7 @@ def finish_active_task(request):
             task.is_active = False
             task.is_completed = True
             task.completed_task_start_time = task.creation_time
-            task.completed_task_end_time = timezone.now()
-            task.task_time_interval = format_timedelta(task.completed_task_end_time - task.task_current_time)
+            task.completed_task_end_time = today
             task.save()
             return JsonResponse({
                 'success': True,
@@ -148,13 +147,12 @@ def remove_pending_task(request):
 @require_POST
 @login_required
 def add_completed_task(request):
-    user = request.user
     task_name = request.POST.get('task_name')
     task_start_time = request.POST.get('task_start')
     task_end_time = request.POST.get('task_end')
     try:
         new_task = TaskList.objects.create(
-            user=user,
+            user=request.user,
             task_name=task_name,
             is_completed=True,
             completed_task_start_time=get_today_date_with_specified_time(task_start_time),
@@ -264,40 +262,57 @@ def change_pending_tasks_order(request):
     return JsonResponse({'success': True})
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def load_next_completed_tasks(request):
     body_unicode = request.body.decode('utf-8')
-    date_to_decode = json.loads(body_unicode).get('date')
-    date = datetime.fromisoformat(date_to_decode.replace('Z', '+00:00'))
-    user = request.user
+    date_to_parse = json.loads(body_unicode).get('date')
+    if date_to_parse:
+        date = parse_date(date_to_parse)
 
-    return JsonResponse({'success': False})
-    # next_smallest_date = TaskList.objects.filter(
-    #     completed_task_start_time__lt=date,
-    #     user=user,
-    # ).aggregate(next_smallest_date=Max('completed_task_start_time__lt'))
-    #
-    # next_smallest_date = next_smallest_date.get('next_smallest_date', None)
-    #
-    # if next_smallest_date:
-    #     next_smallest_date = next_smallest_date.date()  # Если вам нужна только дата без времени
-    #
-    #     # Определяем начало и конец дня для next_smallest_date
-    #     start_of_day = datetime.combine(next_smallest_date, datetime.min.time())
-    #     end_of_day = start_of_day + timedelta(days=1)  # Следующий день
-    #
-    #     # Запрос для получения записей за один день
-    #     tasks_in_day = TaskList.objects.filter(
-    #         task_start_time__range=(start_of_day, end_of_day),
-    #         user=request.user
-    #     )
-    #
-    #     # теперь у вас есть записи tasks_in_day, содержащие все задачи,
-    #     # выполненные в тот же день, что и next_smallest_date
-    # else:
-    #     # Обработка случая, когда next_smallest_date не был найден
-    #     pass
-    #
-    #
-    # return JsonResponse({'success': True})
+        # Получаем дату для следующих задач
+        next_tasks_date = (
+            TaskList.objects
+            .filter(creation_time__lt=date)
+            .order_by('-creation_time')
+            .first()
+        ).creation_time.date()
+
+        # Получаем выполненные задачи с временными интервалами
+        completed_tasks_with_time = TaskList.objects.filter(
+            user=request.user,
+            is_completed=True,
+            completed_task_start_time__date=next_tasks_date
+        ).order_by('-completed_task_start_time')
+
+        # Вычисляем суммарное время выполненных задач с временными интервалами
+        completed_tasks_total_time = get_completed_tasks_total_time(completed_tasks_with_time)
+
+        # Форматируем время начала и конца в нужный формат
+        formatted_completed_tasks_with_time = []
+        for task in completed_tasks_with_time:
+            formatted_task = {
+                'task_name': task.task_name,
+                'completed_task_start_time': task.get_completed_task_start_time(),
+                'completed_task_end_time': task.get_completed_task_end_time(),
+                'completed_task_time_difference': task.get_completed_task_time_difference()
+            }
+            formatted_completed_tasks_with_time.append(formatted_task)
+
+        # Получаем выполненные задачи без временных интервалов
+        completed_tasks_no_time = TaskList.objects.filter(
+            user=request.user,
+            is_completed=True,
+            creation_time__date=next_tasks_date,
+            completed_task_start_time__isnull=True
+        ).values('task_name')
+
+        return JsonResponse({
+            'success': True,
+            'title_date': date_to_day_month_weekday(next_tasks_date),
+            'completed_tasks_with_time': formatted_completed_tasks_with_time,
+            'completed_tasks_total_time': completed_tasks_total_time,
+            'completed_tasks_no_time': list(completed_tasks_no_time)
+        })
+    else:
+        return JsonResponse({'success': False, 'errors': 'Provide date'}, status=400)

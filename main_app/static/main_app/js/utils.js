@@ -1,4 +1,12 @@
 addEventListener("DOMContentLoaded", () => {
+    const pendingTasks = document.querySelectorAll(".waiting-task");
+
+    for (let i = 0; i < pendingTasks.length; i++) {
+        pendingTasks[i]
+            .querySelector("._icon-play")
+            .addEventListener("click", makePendingTaskActive);
+    }
+
     /* POPUP SECTION STARTS */
     const popupLinks = document.querySelectorAll(".popup-link");
     const body = document.querySelector("body");
@@ -713,4 +721,31 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+function getDateToSend(dateString) {
+    if (dateString.toLowerCase() !== "сегодня") {
+        return dateString;
+    }
+
+    let monthsMap = new Map([
+        [0, "января"],
+        [1, "февраля"],
+        [2, "марта"],
+        [3, "апреля"],
+        [4, "мая"],
+        [5, "июня"],
+        [6, "июля"],
+        [7, "августа"],
+        [8, "сентября"],
+        [9, "октября"],
+        [10, "ноября"],
+        [11, "декабря"],
+    ]);
+
+    const today = new Date();
+    const day = today.getDate();
+    const month = monthsMap.get(today.getMonth());
+
+    return `${day} ${month}`;
 }

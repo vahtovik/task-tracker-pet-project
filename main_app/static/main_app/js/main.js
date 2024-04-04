@@ -912,79 +912,143 @@ function editCredentials() {
         });
 }
 
-const pendingTasks = document.querySelectorAll(".waiting-task");
+function loadNextCompletedTasks() {
+    let tasksBlock = document.querySelectorAll(".tasks__block");
+    let lastTaskBlockDate = tasksBlock[tasksBlock.length - 1]
+        .querySelector(".tasks__block__info__title h2")
+        .textContent.split(",")[0];
 
-for (let i = 0; i < pendingTasks.length; i++) {
-    pendingTasks[i]
-        .querySelector("._icon-play")
-        .addEventListener("click", makePendingTaskActive);
+    // Получаем дату для отправки на сервер
+    let dateToSend = getDateToSend(lastTaskBlockDate);
+
+    // Получаем из cookie значение csrftoken
+    const csrftoken = getCookie("csrftoken");
+
+    // Отправляем асинхронный запрос на сервер
+    fetch("/load-next-completed-tasks/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify({ date: dateToSend }),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            let tasksDiv = document.querySelector(".tasks");
+
+            let tasksBlock = document.createElement("div");
+            tasksBlock.classList.add("tasks__block");
+
+            let blockInfo = document.createElement("div");
+            blockInfo.classList.add("tasks__block__info");
+
+            let blockTitle = document.createElement("div");
+            blockTitle.classList.add("tasks__block__info__title");
+
+            let titleHeading = document.createElement("h2");
+            titleHeading.textContent = data.title_date;
+
+            let blockTime = document.createElement("div");
+            blockTime.classList.add("tasks__block__info__time");
+            blockTime.textContent = data.completed_tasks_total_time;
+
+            let blockList = document.createElement("ul");
+            blockList.classList.add("tasks__block__list", "disable-hover");
+
+            data.completed_tasks_with_time.forEach((task) => {
+                let listItem = document.createElement("li");
+                listItem.classList.add(
+                    "tasks__block__list__item",
+                    "list__item",
+                    "done"
+                );
+
+                let listItemLink = document.createElement("a");
+                listItemLink.href = "#";
+                listItemLink.classList.add("list__item__link");
+
+                let titleDiv = document.createElement("div");
+                titleDiv.classList.add("list__item__title");
+                titleDiv.textContent = task.task_name;
+
+                let strendDiv = document.createElement("div");
+                strendDiv.classList.add("list__item__strend");
+                strendDiv.textContent =
+                    task.completed_task_start_time +
+                    " - " +
+                    task.completed_task_end_time;
+
+                let spendtimeDiv = document.createElement("div");
+                spendtimeDiv.classList.add("list__item__spendtime");
+                spendtimeDiv.textContent = task.completed_task_time_difference;
+
+                listItemLink.appendChild(titleDiv);
+                listItemLink.appendChild(strendDiv);
+                listItemLink.appendChild(spendtimeDiv);
+                listItem.appendChild(listItemLink);
+                blockList.appendChild(listItem);
+            });
+
+            data.completed_tasks_no_time.forEach((task) => {
+                let listItem = document.createElement("li");
+                listItem.classList.add(
+                    "tasks__block__list__item",
+                    "list__item",
+                    "done"
+                );
+
+                let listItemLink = document.createElement("a");
+                listItemLink.href = "#";
+                listItemLink.classList.add("list__item__link");
+
+                let titleDiv = document.createElement("div");
+                titleDiv.classList.add("list__item__title");
+                titleDiv.textContent = task.task_name;
+
+                let strendDiv = document.createElement("div");
+                strendDiv.classList.add("list__item__strend");
+                strendDiv.textContent = "";
+
+                let spendtimeDiv = document.createElement("div");
+                spendtimeDiv.classList.add("list__item__spendtime");
+                spendtimeDiv.textContent = "";
+
+                listItemLink.appendChild(titleDiv);
+                listItemLink.appendChild(strendDiv);
+                listItemLink.appendChild(spendtimeDiv);
+                listItem.appendChild(listItemLink);
+                blockList.appendChild(listItem);
+            });
+
+            tasksBlock.appendChild(blockInfo);
+            blockInfo.appendChild(blockTitle);
+            blockTitle.appendChild(titleHeading);
+            blockInfo.appendChild(blockTime);
+            tasksBlock.appendChild(blockList);
+            tasksDiv.append(tasksBlock);
+
+            let loadMoreButton = document.querySelector(
+                ".footer__options__item.download-more a"
+            );
+            if (loadMoreButton) {
+                loadMoreButton.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                });
+            } else {
+                console.error("Кнопка 'Загрузить ещё' не найдена");
+            }
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
 }
 
 const downloadMore = document.querySelector(".download-more");
-async function addTaskBlock(e) {
-    const tasksContainer = document.querySelector(".tasks");
-    const tasks = document.querySelectorAll(".tasks__block");
-    const lastTaskName = tasks[tasks.length - 1]
-        .querySelector(".tasks__block__info__title h2")
-        .textContent.split(",")[0];
-    function parseDateString(dateString) {
-        const today = new Date();
-
-        if (dateString.toLowerCase() === "сегодня") {
-            return today;
-        }
-
-        const parts = dateString.split(" ");
-
-        const day = parseInt(parts[0]);
-        const month = parts[1];
-
-        // Map month names to month numbers
-        const monthsMap = {
-            января: 0,
-            февраля: 1,
-            марта: 2,
-            апреля: 3,
-            мая: 4,
-            июня: 5,
-            июля: 6,
-            августа: 7,
-            сентября: 8,
-            октября: 9,
-            ноября: 10,
-            декабря: 11,
-        };
-
-        const monthNumber = monthsMap[month.toLowerCase()];
-
-        // Создаем новый объект Date с указанным днем и месяцем
-        const date = new Date(today.getFullYear(), monthNumber, day);
-
-        return date;
-    }
-
-    function insertNewTasksBlock(data) {}
-
-    const dateObj = parseDateString(lastTaskName);
-    const dateUTC = new Date(
-        Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate())
-    );
-
-    console.log(dateObj);
-    console.log(dateUTC);
-
-    try {
-        const data = await fetch("/load-next-completed-tasks/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ date: dateUTC }),
-        });
-
-        console.log(data);
-    } catch (e) {
-        console.error("can't get previous tasks. error: ", e);
-    }
-}
-downloadMore.addEventListener("click", addTaskBlock);
+downloadMore.addEventListener("click", loadNextCompletedTasks);
