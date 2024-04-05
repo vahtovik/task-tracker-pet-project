@@ -964,6 +964,13 @@ function loadNextCompletedTasks() {
                 return;
             }
 
+            if (
+                !data.completed_tasks_with_time.length &&
+                !data.completed_tasks_no_time.length
+            ) {
+                return;
+            }
+
             let tasksDiv = document.querySelector(".tasks");
 
             let tasksBlock = document.createElement("div");
