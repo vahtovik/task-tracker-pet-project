@@ -424,8 +424,6 @@ addEventListener("DOMContentLoaded", () => {
                 ? targetLinkStrend.textContent.split("-")[1].trim()
                 : 0
             : 0;
-        // const infoTitle = targetLink.closest('.tasks__block__list').previousElementSibling ? targetLink.closest('.tasks__block__list').previousElementSibling.querySelector('.tasks__block__info__title h2') : 0
-        console.log("111111");
 
         if (popupInputTaskName && targetLinkTaskName) {
             popupInputTaskName.value = targetLinkTaskName.textContent;

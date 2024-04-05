@@ -11,7 +11,7 @@ from users.forms import ChangeLoginAndPasswordForm
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
 from .utils import get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time, today, parse_date, \
-    date_to_day_month_weekday
+    date_to_day_month_weekday, get_time_difference
 
 
 @require_GET
@@ -60,7 +60,9 @@ def index(request):
 @login_required
 def add_active_task(request):
     form = TaskListForm(request.POST)
+    # Ищем в БД активную задачу
     active_task = TaskList.objects.filter(user=request.user, is_active=True).first()
+    # Продолжаем работу если в БД не нашлась активная задача
     if not active_task:
         if form.is_valid():
             task = form.save(commit=False)
@@ -104,7 +106,7 @@ def finish_active_task(request):
             task.save()
             return JsonResponse({
                 'success': True,
-                'task_duration': (task.completed_task_end_time - task.task_current_time).seconds // 60,
+                'task_duration': get_time_difference(task.task_current_time, task.completed_task_end_time),
             })
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
@@ -159,8 +161,9 @@ def add_completed_task(request):
             completed_task_end_time=get_today_date_with_specified_time(task_end_time),
         )
 
+        # Если у задачи определены время начала и окончания
         if task_start_time and task_end_time:
-            task_duration = (new_task.completed_task_end_time - new_task.completed_task_start_time).seconds // 60
+            task_duration = get_time_difference(new_task.completed_task_start_time, new_task.completed_task_end_time)
         else:
             task_duration = None
 
@@ -174,7 +177,7 @@ def add_completed_task(request):
     except IntegrityError as e:
         return JsonResponse({'success': False, 'errors': str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'errors': 'Error in task creating'}, status=400)
+        return JsonResponse({'success': False, 'errors': f'Error in task creating: {e}'}, status=400)
 
 
 @require_POST
@@ -194,8 +197,10 @@ def edit_completed_task(request):
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
 
+        # Если у задачи определены время начала и окончания
         if task_start_time and task_end_time:
-            task_duration = (task.completed_task_end_time - task.completed_task_start_time).seconds // 60
+            # Считаем разницу времени окончания и начала
+            task_duration = get_time_difference(task.completed_task_start_time, task.completed_task_end_time)
         else:
             task_duration = None
 
@@ -252,7 +257,10 @@ def make_pending_task_active(request):
 @login_required
 def change_pending_tasks_order(request):
     body_unicode = request.body.decode('utf-8')
+    # Получаем список словарей формата {pk: value, order: value}
     id_list = json.loads(body_unicode).get('idList')
+
+    # Для каждой задачи устанавливаем порядок
     for item in id_list:
         pk, order = item['id'], item['orderNum']
         task = TaskList.objects.get(pk=pk)
@@ -268,6 +276,7 @@ def load_next_completed_tasks(request):
     body_unicode = request.body.decode('utf-8')
     date_to_parse = json.loads(body_unicode).get('date')
     if date_to_parse:
+        # Парсим дату из формата "1 марта" -> datetime(2024, 3, 1)
         date = parse_date(date_to_parse)
 
         # Находим задачу с максимальной предыдущей датой

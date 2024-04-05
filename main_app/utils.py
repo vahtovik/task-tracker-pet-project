@@ -20,6 +20,10 @@ def get_completed_tasks_total_time(completed_tasks):
     return f'{int(hours)} ч {int(minutes)} м' if hours > 0 else f'{int(minutes)} м'
 
 
+def get_time_difference(start, end):
+    return (end - start).seconds // 60
+
+
 def get_today_date_with_specified_time(time):
     if not time:
         return None
