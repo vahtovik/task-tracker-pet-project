@@ -6,7 +6,9 @@ function addActiveTask() {
 
     // Проверяем присутствует ли на странице активная задача
     if (activeTask) {
-        let currPopup = document.getElementById("warning-popup");
+        let currPopup = document.getElementById(
+            "finish-active-task-warning-popup"
+        );
         popupOpen(currPopup);
         return;
     }
@@ -36,7 +38,9 @@ function addActiveTask() {
             // Проверяем, есть ли в БД активная задача
             let task_already_present = data.task_already_present;
             if (task_already_present) {
-                let currPopup = document.getElementById("warning-popup");
+                let currPopup = document.getElementById(
+                    "finish-active-task-warning-popup"
+                );
                 popupOpen(currPopup);
                 return;
             }
@@ -940,6 +944,26 @@ function loadNextCompletedTasks() {
             return response.json();
         })
         .then((data) => {
+            // Проверяем, если задачи закончились
+            if (data.success && data.is_end_of_tasks) {
+                let endOfTasksPopup = document.getElementById(
+                    "end-of-tasks-warning-popup"
+                );
+                popupOpen(endOfTasksPopup);
+
+                let loadMoreButton = document.querySelector(
+                    ".footer__options__item.download-more a"
+                );
+                if (loadMoreButton) {
+                    loadMoreButton.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+                }
+
+                return;
+            }
+
             let tasksDiv = document.querySelector(".tasks");
 
             let tasksBlock = document.createElement("div");
@@ -956,7 +980,9 @@ function loadNextCompletedTasks() {
 
             let blockTime = document.createElement("div");
             blockTime.classList.add("tasks__block__info__time");
-            blockTime.textContent = data.completed_tasks_total_time;
+            if (data.completed_tasks_total_time !== "0 м") {
+                blockTime.textContent = data.completed_tasks_total_time;
+            }
 
             let blockList = document.createElement("ul");
             blockList.classList.add("tasks__block__list", "disable-hover");

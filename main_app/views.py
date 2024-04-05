@@ -270,13 +270,13 @@ def load_next_completed_tasks(request):
     if date_to_parse:
         date = parse_date(date_to_parse)
 
-        # Получаем дату для следующих задач
-        next_tasks_date = (
-            TaskList.objects
-            .filter(creation_time__lt=date)
-            .order_by('-creation_time')
-            .first()
-        ).creation_time.date()
+        # Находим задачу с максимальной предыдущей датой
+        target_task = TaskList.objects.filter(creation_time__lt=date).order_by('-creation_time').first()
+        if target_task:
+            # Получаем дату для следующих задач
+            next_tasks_date = target_task.creation_time.date()
+        else:
+            return JsonResponse({'success': True, 'is_end_of_tasks': True})
 
         # Получаем выполненные задачи с временными интервалами
         completed_tasks_with_time = TaskList.objects.filter(

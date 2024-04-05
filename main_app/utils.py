@@ -33,7 +33,7 @@ def parse_date(date_string):
     year = datetime.now().year
     day_str, month_str = date_string.split()
     day, month = int(day_str), MONTHS_DAY.get(month_str)
-    return datetime(year, month, day)
+    return timezone.make_aware(datetime(year, month, day), timezone.get_current_timezone())
 
 
 def date_to_day_month_weekday(date):

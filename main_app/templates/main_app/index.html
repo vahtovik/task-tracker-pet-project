@@ -10,7 +10,9 @@
                     {% csrf_token %}
                     <input type="text" class="input" name="task_name">
                     <i class="_icon-plus plus-icon" onclick="addPendingTask()"></i>
-                    <i class="_icon-play warning-popup" onclick="addActiveTask()" href="#warning-popup"></i>
+                    <i class="_icon-play finish-active-task-warning-popup"
+                       href="#finish-active-task-warning-popup"
+                       onclick="addActiveTask()"></i>
                 </form>
             </div>
             <div class="tasks__block active__tasks">
@@ -135,7 +137,7 @@
     </div>
 </div>
 
-<div class="popup" id="warning-popup">
+<div class="popup" id="finish-active-task-warning-popup">
     <div class="popup__body">
         <div class="popup__content">
             <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
@@ -280,6 +282,17 @@
                     </a>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="end-of-tasks-warning-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Нет задач за меньшую дату</h3>
+            </div>
         </div>
     </div>
 </div>
