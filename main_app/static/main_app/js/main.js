@@ -1041,8 +1041,6 @@ function loadNextCompletedTasks() {
                     behavior: "smooth",
                     block: "start",
                 });
-            } else {
-                console.error("Кнопка 'Загрузить ещё' не найдена");
             }
         })
         .catch((error) => {
