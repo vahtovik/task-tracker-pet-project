@@ -1,16 +1,17 @@
 from datetime import datetime
 from django.utils import timezone
 
-today = timezone.now()
+from django.db.models.query import QuerySet
+
+from .models import TaskList
+from typing import Optional
 
 
-def timedelta_to_minutes_and_seconds(td):
-    minutes = td.seconds // 60
-    seconds = td.seconds % 60
-    return '{:02}:{:02}'.format(minutes, seconds)
-
-
-def get_completed_tasks_total_time(completed_tasks):
+def get_completed_tasks_total_time(completed_tasks: QuerySet[TaskList]) -> str:
+    """
+    Рассчитывает общее время выполнения завершенных задач из completed_tasks
+    Возвращает строку с временем в формате 'часы ч минуты м'
+    """
     total_seconds = sum(
         (task.completed_task_end_time - task.completed_task_start_time).total_seconds()
         for task in completed_tasks
@@ -20,11 +21,18 @@ def get_completed_tasks_total_time(completed_tasks):
     return f'{int(hours)} ч {int(minutes)} м' if hours > 0 else f'{int(minutes)} м'
 
 
-def get_time_difference(start, end):
+def get_time_difference(start: datetime, end: datetime) -> int:
+    """
+    Возвращает разницу во времени между end и start в минутах
+    """
     return (end - start).seconds // 60
 
 
-def get_today_date_with_specified_time(time):
+def get_today_date_with_specified_time(time: str) -> Optional[datetime]:
+    """
+    Возвращает объект datetime с текущей датой и временем указанным в time
+    Если время не указано (None), возвращает None
+    """
     if not time:
         return None
     current_date = datetime.now().date()
@@ -33,14 +41,21 @@ def get_today_date_with_specified_time(time):
                                timezone.get_current_timezone())
 
 
-def parse_date(date_string):
+def parse_date(date_string: str) -> datetime:
+    """
+    Преобразует строку с датой в объект datetime
+    Параметр date_string должен быть в формате 'день Месяц' (например, '5 Марта')
+    """
     year = datetime.now().year
     day_str, month_str = date_string.split()
-    day, month = int(day_str), MONTHS_DAY.get(month_str)
+    day, month = int(day_str), MONTHS_DAY.get(month_str.lower())
     return timezone.make_aware(datetime(year, month, day), timezone.get_current_timezone())
 
 
-def date_to_day_month_weekday(date):
+def date_to_day_month_weekday(date: datetime) -> str:
+    """
+    Преобразует объект datetime в строку вида 'день Месяц, День_недели'
+    """
     day = date.day
     month = MONTHS.get(date.month)
     weekday = DAYS.get(date.weekday())

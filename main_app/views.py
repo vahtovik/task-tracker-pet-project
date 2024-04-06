@@ -5,13 +5,14 @@ from django.db import IntegrityError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from users.forms import ChangeLoginAndPasswordForm
 from .forms import TaskListForm, GetPendingTaskForm
 from .models import TaskList
-from .utils import get_completed_tasks_total_time, MONTHS, get_today_date_with_specified_time, today, parse_date, \
-    date_to_day_month_weekday, get_time_difference
+from .utils import get_completed_tasks_total_time, get_time_difference, get_today_date_with_specified_time, \
+    parse_date, date_to_day_month_weekday, MONTHS
 
 
 @require_GET
@@ -27,7 +28,7 @@ def index(request):
     completed_tasks_with_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
-        completed_task_start_time__date=today.date()
+        completed_task_start_time__date=timezone.now().date()
     ).order_by('-completed_task_start_time')
 
     # Вычисляем суммарное время выполненных задач с временными интервалами
@@ -37,7 +38,7 @@ def index(request):
     completed_tasks_no_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
-        creation_time__date=today.date(),
+        creation_time__date=timezone.now().date(),
         completed_task_start_time__isnull=True
     )
 
@@ -50,8 +51,8 @@ def index(request):
         'completed_tasks_with_time': completed_tasks_with_time,
         'completed_tasks_total_time': completed_tasks_total_time,
         'completed_tasks_no_time': completed_tasks_no_time,
-        'month_day': today.date().day,
-        'month': MONTHS.get(today.date().month),
+        'month_day': timezone.now().date().day,
+        'month': MONTHS.get(timezone.now().date().month),
         'form': form,
     })
 
@@ -74,7 +75,7 @@ def add_active_task(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
-        return JsonResponse({'success': False, 'task_already_present': True})
+        return JsonResponse({'success': False, 'There is already an active task': True})
 
 
 @require_POST
@@ -102,11 +103,11 @@ def finish_active_task(request):
             task.is_active = False
             task.is_completed = True
             task.completed_task_start_time = task.creation_time
-            task.completed_task_end_time = today
+            task.completed_task_end_time = timezone.now()
             task.save()
             return JsonResponse({
                 'success': True,
-                'task_duration': get_time_difference(task.task_current_time, task.completed_task_end_time),
+                'task_duration': get_time_difference(task.completed_task_start_time, task.completed_task_end_time),
             })
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
@@ -280,7 +281,10 @@ def load_next_completed_tasks(request):
         date = parse_date(date_to_parse)
 
         # Находим задачу с максимальной предыдущей датой
-        target_task = TaskList.objects.filter(creation_time__lt=date).order_by('-creation_time').first()
+        target_task = TaskList.objects.filter(
+            user=request.user,
+            creation_time__lt=date
+        ).order_by('-creation_time').first()
         if target_task:
             # Получаем дату для следующих задач
             next_tasks_date = target_task.creation_time.date()
