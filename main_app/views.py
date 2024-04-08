@@ -75,7 +75,7 @@ def add_active_task(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
-        return JsonResponse({'success': False, 'There is already an active task': True})
+        return JsonResponse({'success': False, 'message': 'There is already an active task'})
 
 
 @require_POST
@@ -110,9 +110,9 @@ def finish_active_task(request):
                 'task_duration': get_time_difference(task.completed_task_start_time, task.completed_task_end_time),
             })
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
@@ -127,7 +127,7 @@ def edit_pending_task(request):
             task.save()
             return JsonResponse({'success': True, 'task_id': pk})
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
@@ -142,9 +142,9 @@ def remove_pending_task(request):
             task.delete()
             return JsonResponse({'success': True, 'task_id': pk})
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
@@ -176,9 +176,9 @@ def add_completed_task(request):
             'task_duration': task_duration,
         })
     except IntegrityError as e:
-        return JsonResponse({'success': False, 'errors': str(e)}, status=400)
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'errors': f'Error in task creating: {e}'}, status=400)
+        return JsonResponse({'success': False, 'error': f'Error in task creating: {e}'}, status=400)
 
 
 @require_POST
@@ -196,7 +196,7 @@ def edit_completed_task(request):
             task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
             task.save()
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
 
         # Если у задачи определены время начала и окончания
         if task_start_time and task_end_time:
@@ -213,7 +213,7 @@ def edit_completed_task(request):
             'task_duration': task_duration,
         })
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
@@ -226,9 +226,9 @@ def delete_completed_task(request):
             task.delete()
             return JsonResponse({'success': True, 'task_id': pk})
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
@@ -249,9 +249,9 @@ def make_pending_task_active(request):
                 'start': datetime.now().strftime('%H:%M'),
             })
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide task pk'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
@@ -328,4 +328,4 @@ def load_next_completed_tasks(request):
             'completed_tasks_no_time': list(completed_tasks_no_time)
         })
     else:
-        return JsonResponse({'success': False, 'errors': 'Provide date'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Provide date'}, status=400)
