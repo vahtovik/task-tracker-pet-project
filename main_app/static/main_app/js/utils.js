@@ -11,8 +11,6 @@ addEventListener("DOMContentLoaded", () => {
     const popupLinks = document.querySelectorAll(".popup-link");
     const body = document.querySelector("body");
 
-    let unlock = 800;
-
     if (popupLinks.length > 0) {
         for (let index = 0; index < popupLinks.length; index++) {
             const popupLink = popupLinks[index];
@@ -49,12 +47,10 @@ addEventListener("DOMContentLoaded", () => {
     }
 
     function popupOpen(currentPopup) {
-        if (currentPopup && unlock) {
+        if (currentPopup) {
             const popupActive = document.querySelector(".popup.open");
             if (popupActive) {
                 popupClose(popupActive, false);
-            } else {
-                //	bodyBlock() убрать скрол сдвиг. Добавлю если нужно
             }
             currentPopup.classList.add("open");
             currentPopup.addEventListener("click", function (e) {
@@ -65,8 +61,16 @@ addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function popupClose(popupActive, doUnlock = true) {
+    function popupClose(popupActive) {
         popupActive.classList.remove("open");
+
+        const divTimeDifference = popupActive.querySelector(
+            ".popup__form-range__time"
+        );
+        if (divTimeDifference) {
+            divTimeDifference.textContent = "";
+        }
+
         const inputs = popupActive.querySelectorAll("input");
         if (inputs.length) {
             for (let i = 0; i < inputs.length; i++) {
@@ -98,10 +102,6 @@ addEventListener("DOMContentLoaded", () => {
             hiddenInput.value = "";
             hiddenInput.dispatchEvent(new Event("change"));
         }
-
-        if (doUnlock) {
-            // bodyUnlock()
-        }
     }
 
     /* Sortable SECTION STARTS */
@@ -113,8 +113,6 @@ addEventListener("DOMContentLoaded", () => {
     const sortable = new Sortable(sortbaleContainer, {
         draggable: sortableElementsSelector,
         onEnd: function () {
-            console.log("drag:stop");
-
             document
                 .querySelectorAll(".sortable-mirror")
                 .forEach((e) => e.remove());
@@ -148,9 +146,7 @@ addEventListener("DOMContentLoaded", () => {
                 },
             })
                 .then((response) => response.json())
-                .then((data) => {
-                    console.log("it works");
-                });
+                .then((data) => {});
         },
     });
 
@@ -376,8 +372,6 @@ addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    //calculateTimeDifference();
-
     /* INPUT VALIDATION SECTION ENDS */
 
     /* PUT ALL OF THE DATA TO POPUP STARTS */
@@ -388,9 +382,10 @@ addEventListener("DOMContentLoaded", () => {
         const popupInputTaskName = popup.querySelector(".task__name");
         const popupInputTaskStart = popup.querySelector("[name='task_start']");
         const popupInputTaskEnd = popup.querySelector("[name='task_end']");
-        const popupDay = popup.querySelector(".popup__form-day p");
+        const popupInputTaskEndTimeDifference = popup.querySelector(
+            ".popup__form-range__time"
+        );
 
-        /* VSE LI POPUPS S TAKIM CLASSOM ??????? KAJETSYA DA */
         const allLinks = document.querySelectorAll(".popup-link");
         let targetLink;
         for (const link of allLinks) {
@@ -403,9 +398,6 @@ addEventListener("DOMContentLoaded", () => {
         }
 
         if (!targetLink) {
-            console.log(
-                "hidden value was change not by pressing on a.popup-link. It is impossible!"
-            );
             return;
         }
 
@@ -414,15 +406,24 @@ addEventListener("DOMContentLoaded", () => {
         const targetLinkStrend = targetLink.querySelector(
             ".list__item__strend"
         );
+        const targetLinkSpendTime = targetLink.querySelector(
+            ".list__item__spendtime"
+        );
+
         const targetLinkStr = targetLinkStrend
             ? targetLinkStrend.textContent
                 ? targetLinkStrend.textContent.split("-")[0].trim()
                 : 0
             : 0;
+
         const targetLinkEnd = targetLinkStrend
             ? targetLinkStrend.textContent
                 ? targetLinkStrend.textContent.split("-")[1].trim()
                 : 0
+            : 0;
+
+        const targetLinkTimeDifference = targetLinkSpendTime
+            ? targetLinkSpendTime.textContent
             : 0;
 
         if (popupInputTaskName && targetLinkTaskName) {
@@ -445,9 +446,14 @@ addEventListener("DOMContentLoaded", () => {
             popupInputTaskEnd.value = targetLinkEnd;
         }
 
-        // if (infoTitle && popupDay) {
-        //     popupDay.textContent = infoTitle.textContent.toLocaleLowerCase().trim()
-        // }
+        if (
+            popupInputTaskEndTimeDifference &&
+            targetLinkSpendTime &&
+            targetLinkSpendTime.textContent !== ""
+        ) {
+            popupInputTaskEndTimeDifference.textContent =
+                targetLinkTimeDifference;
+        }
     }
     for (const hiddenInput of hiddenInputs) {
         hiddenInput.addEventListener("change", getPopupData);
@@ -460,8 +466,6 @@ function popupOpen(currentPopup) {
         const popupActive = document.querySelector(".popup.open");
         if (popupActive) {
             popupClose(popupActive, false);
-        } else {
-            //	bodyBlock() убрать скрол сдвиг. Добавлю если нужно
         }
         currentPopup.classList.add("open");
         currentPopup.addEventListener("click", function (e) {
@@ -472,10 +476,16 @@ function popupOpen(currentPopup) {
     }
 }
 
-function popupClose(popupActive, doUnlock = true) {
+function popupClose(popupActive) {
     popupActive.classList.remove("open");
-    // const hiddenInput = popupActive.querySelector("[name='task_id']")
-    // hiddenInput.value = ""
+
+    const divTimeDifference = popupActive.querySelector(
+        ".popup__form-range__time"
+    );
+    if (divTimeDifference) {
+        divTimeDifference.textContent = "";
+    }
+
     const inputs = popupActive.querySelectorAll("input");
     if (inputs.length) {
         for (let i = 0; i < inputs.length; i++) {
@@ -483,9 +493,6 @@ function popupClose(popupActive, doUnlock = true) {
                 inputs[i].value = "";
             }
         }
-    }
-    if (doUnlock) {
-        // bodyUnlock()
     }
 }
 
@@ -620,7 +627,6 @@ function sortAndGetTotalTime() {
         if (h2Element.textContent.trim() === "Сегодня") {
             let parentDiv = h2Element.parentElement.parentElement;
             let timeDiv = parentDiv.querySelector(".tasks__block__info__time");
-            console.log(totalDuration);
             if (totalDuration > 0) {
                 timeDiv.textContent = formatDuration(totalDuration);
             } else {
@@ -632,9 +638,6 @@ function sortAndGetTotalTime() {
 
 function makePopupOpen() {
     const popupLinks = document.querySelectorAll(".popup-link");
-    const body = document.querySelector("body");
-
-    let unlock = 800;
 
     if (popupLinks.length > 0) {
         for (let index = 0; index < popupLinks.length; index++) {
@@ -693,7 +696,6 @@ function isTimeCorrect(startTime, endTime) {
                 alert("Время окончания задачи должно превышать время начала!");
                 return false;
             } else {
-                console.log("Правильное время");
                 return true;
             }
         }
