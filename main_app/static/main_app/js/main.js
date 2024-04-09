@@ -272,6 +272,7 @@ function editPendingTask() {
     let form = document.getElementById("edit__pending__popup__form");
     let formData = new FormData(form);
     let taskName = form.task_name.value;
+    let taskId = formData.get("task_id");
 
     // Проверяем, что текст задачи не пустой
     if (isEmpty(taskName)) {
@@ -279,7 +280,7 @@ function editPendingTask() {
     }
 
     // Отправляем асинхронный запрос на сервер
-    fetch("/edit-pending-task/", {
+    fetch(`/edit-pending-task/${taskId}/`, {
         method: "POST",
         body: formData,
     })
@@ -324,9 +325,10 @@ function removePendingTask() {
     // Собираем данные формы
     let form = document.getElementById("edit__pending__popup__form");
     let formData = new FormData(form);
+    let taskId = formData.get("task_id");
 
     // Отправляем асинхронный запрос на сервер
-    fetch("/remove-pending-task/", {
+    fetch(`/remove-pending-task/${taskId}/`, {
         method: "POST",
         body: formData,
     })
@@ -424,8 +426,6 @@ function addCompletedTask() {
             let innerSpendTimeDiv = document.createElement("div");
 
             if (taskStartTime && taskEndTime) {
-                console.log("not null");
-
                 innerLi.classList.add("with__time");
 
                 function addLeadingZero(num) {
@@ -552,6 +552,7 @@ function editCompletedTask() {
     let taskName = form.task_name.value;
     let taskStart = form.task_start.value;
     let taskEnd = form.task_end.value;
+    let taskId = formData.get("task_id");
 
     // Проверяем, что текст задачи не пустой
     if (isEmpty(taskName)) {
@@ -564,7 +565,7 @@ function editCompletedTask() {
     }
 
     // Отправляем асинхронный запрос на сервер
-    fetch("/edit-completed-task/", {
+    fetch(`/edit-completed-task/${taskId}/`, {
         method: "POST",
         body: formData,
     })
@@ -584,24 +585,16 @@ function editCompletedTask() {
                 "today__tasks__block__list"
             );
 
-            console.log(start_time);
-            console.log(end_time);
-            console.log(task_duration);
-
             if (start_time !== "" && end_time !== "") {
-                console.log(true);
-
                 let listItems = tasksList.querySelectorAll(".list__item a");
 
                 listItems.forEach(function (item) {
                     // Проверка наличия атрибута "data-item-id" и сравнение его значения с желаемым
-                    console.log("1");
-                    console.log(task_id);
+
                     if (
                         item.hasAttribute("data-item-id") &&
                         item.getAttribute("data-item-id") == task_id
                     ) {
-                        console.log("2");
                         // Добавление класса "highlight" к текущему элементу <li>
                         let divTime = item.querySelector(".list__item__strend");
                         divTime.textContent = `${start_time} - ${end_time}`;
@@ -628,10 +621,7 @@ function editCompletedTask() {
 
                 sortAndGetTotalTime();
             } else {
-                console.log(false);
-
                 let listItems = tasksList.querySelectorAll(".list__item a");
-                console.log(task_id);
 
                 listItems.forEach(function (item) {
                     // Проверка наличия атрибута "data-item-id" и сравнение его значения с желаемым
@@ -707,9 +697,10 @@ function deleteCompletedTask() {
     // Собираем данные формы
     let form = document.getElementById("edit__completed__task__popup__form");
     let formData = new FormData(form);
+    let taskId = formData.get("task_id");
 
     // Отправляем асинхронный запрос на сервер
-    fetch("/delete-completed-task/", {
+    fetch(`/delete-completed-task/${taskId}/`, {
         method: "POST",
         body: formData,
     })
@@ -1082,4 +1073,6 @@ function loadNextCompletedTasks() {
 }
 
 const downloadMore = document.querySelector(".download-more");
-downloadMore.addEventListener("click", loadNextCompletedTasks);
+if (downloadMore) {
+    downloadMore.addEventListener("click", loadNextCompletedTasks);
+}

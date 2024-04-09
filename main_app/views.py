@@ -110,41 +110,36 @@ def finish_active_task(request):
                 'task_duration': get_time_difference(task.completed_task_start_time, task.completed_task_end_time),
             })
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': f'Task with id {pk} does not exist'}, status=400)
     else:
         return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
 
 
 @require_POST
 @login_required
-def edit_pending_task(request):
+def edit_pending_task(request, task_id):
     form = GetPendingTaskForm(request.POST)
     if form.is_valid():
-        pk = request.POST.get('taskId')
         try:
-            task = TaskList.objects.get(pk=pk)
-            task.task_name = request.POST['task_name']
+            task = TaskList.objects.get(pk=task_id)
+            task.task_name = form.cleaned_data.get('task_name')
             task.save()
-            return JsonResponse({'success': True, 'task_id': pk})
+            return JsonResponse({'success': True, 'task_id': task_id})
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @require_POST
 @login_required
-def remove_pending_task(request):
-    pk = request.POST.get('task_id')
-    if pk:
-        try:
-            task = TaskList.objects.get(pk=pk)
-            task.delete()
-            return JsonResponse({'success': True, 'task_id': pk})
-        except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
-    else:
-        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
+def remove_pending_task(request, task_id):
+    try:
+        task = TaskList.objects.get(pk=task_id)
+        task.delete()
+        return JsonResponse({'success': True, 'task_id': task_id})
+    except TaskList.DoesNotExist:
+        return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
 
 
 @require_POST
@@ -183,52 +178,61 @@ def add_completed_task(request):
 
 @require_POST
 @login_required
-def edit_completed_task(request):
-    pk = request.POST.get('task_id')
-    if pk:
-        task_name = request.POST.get('task_name')
-        task_start_time = request.POST.get('task_start')
-        task_end_time = request.POST.get('task_end')
-        try:
-            task = TaskList.objects.get(pk=pk)
-            task.task_name = task_name
-            task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
-            task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
-            task.save()
-        except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
+def edit_completed_task(request, task_id):
+    task_name = request.POST.get('task_name')
+    task_start_time = request.POST.get('task_start')
+    task_end_time = request.POST.get('task_end')
+    try:
+        task = TaskList.objects.get(pk=task_id)
+        task.task_name = task_name
+        task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
+        task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
+        task.save()
+    except TaskList.DoesNotExist:
+        return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
 
-        # Если у задачи определены время начала и окончания
-        if task_start_time and task_end_time:
-            # Считаем разницу времени окончания и начала
-            task_duration = get_time_difference(task.completed_task_start_time, task.completed_task_end_time)
-        else:
-            task_duration = None
-
-        return JsonResponse({
-            'success': True,
-            'task_id': pk,
-            'start_time': task.completed_task_start_time,
-            'end_time': task.completed_task_end_time,
-            'task_duration': task_duration,
-        })
+    # Если у задачи определены время начала и окончания
+    if task_start_time and task_end_time:
+        # Считаем разницу времени окончания и начала
+        task_duration = get_time_difference(task.completed_task_start_time, task.completed_task_end_time)
     else:
-        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
+        task_duration = None
+
+    return JsonResponse({
+        'success': True,
+        'task_id': task_id,
+        'start_time': task.get_completed_task_start_time(),
+        'end_time': task.get_completed_task_end_time(),
+        'task_duration': task_duration,
+    })
 
 
 @require_POST
 @login_required
-def delete_completed_task(request):
-    pk = request.POST.get('task_id')
-    if pk:
-        try:
-            task = TaskList.objects.get(pk=pk)
-            task.delete()
-            return JsonResponse({'success': True, 'task_id': pk})
-        except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
-    else:
-        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
+def delete_completed_task(request, task_id):
+    try:
+        task = TaskList.objects.get(pk=task_id)
+        task.delete()
+        return JsonResponse({'success': True, 'task_id': task_id})
+    except TaskList.DoesNotExist:
+        return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
+
+
+@require_POST
+@login_required
+def change_pending_tasks_order(request):
+    body_unicode = request.body.decode('utf-8')
+    # Получаем список словарей формата {pk: value, order: value}
+    id_list = json.loads(body_unicode).get('idList')
+
+    # Для каждой задачи устанавливаем порядок
+    for item in id_list:
+        pk, order = item['id'], item['orderNum']
+        task = TaskList.objects.get(pk=pk)
+        task.order = order
+        task.save()
+
+    return JsonResponse({'success': True})
 
 
 @require_POST
@@ -249,26 +253,9 @@ def make_pending_task_active(request):
                 'start': datetime.now().strftime('%H:%M'),
             })
         except TaskList.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Task does not exist'}, status=400)
+            return JsonResponse({'success': False, 'message': f'Task with id {pk} does not exist'}, status=400)
     else:
         return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
-
-
-@require_POST
-@login_required
-def change_pending_tasks_order(request):
-    body_unicode = request.body.decode('utf-8')
-    # Получаем список словарей формата {pk: value, order: value}
-    id_list = json.loads(body_unicode).get('idList')
-
-    # Для каждой задачи устанавливаем порядок
-    for item in id_list:
-        pk, order = item['id'], item['orderNum']
-        task = TaskList.objects.get(pk=pk)
-        task.order = order
-        task.save()
-
-    return JsonResponse({'success': True})
 
 
 @require_POST

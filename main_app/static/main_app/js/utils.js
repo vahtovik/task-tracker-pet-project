@@ -99,8 +99,10 @@ addEventListener("DOMContentLoaded", () => {
             }
         } else {
             const hiddenInput = popupActive.querySelector("[name='task_id']");
-            hiddenInput.value = "";
-            hiddenInput.dispatchEvent(new Event("change"));
+            if (hiddenInput) {
+                hiddenInput.value = "";
+                hiddenInput.dispatchEvent(new Event("change"));
+            }
         }
     }
 
