@@ -11,10 +11,10 @@ urlpatterns = [
     path('make-active-task-pending/', views.make_active_task_pending, name='make-active-task-pending'),
     path('edit-pending-task/<int:task_id>/', views.edit_pending_task, name='edit-pending-task'),
     path('remove-pending-task/<int:task_id>/', views.remove_pending_task, name='remove-pending-task'),
+    path('make-pending-task-active/', views.make_pending_task_active, name='make-pending-task-active'),
     path('add-completed-task/', views.add_completed_task, name='add-completed-task'),
     path('edit-completed-task/<int:task_id>/', views.edit_completed_task, name='edit-completed-task'),
     path('delete-completed-task/<int:task_id>/', views.delete_completed_task, name='delete-completed-task'),
     path('change-pending-tasks-order/', views.change_pending_tasks_order, name='change-pending-tasks-order'),
-    path('make-pending-task-active/', views.make_pending_task_active, name='make-pending-task-active'),
     path('load-next-completed-tasks/', views.load_next_completed_tasks, name='load-next-completed-tasks'),
 ]

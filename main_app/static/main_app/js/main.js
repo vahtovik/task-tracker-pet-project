@@ -366,6 +366,7 @@ function makeActiveTaskPending() {
             divListItemRun.appendChild(iconElement);
 
             let innerA = liActiveTask.querySelector(".list__item__link");
+            innerA.href = "#edit-task-popup";
             innerA.appendChild(divListItemRun);
 
             let popupId = "edit-active-task-popup";
@@ -471,6 +472,103 @@ function removePendingTask() {
                     li.remove();
                 }
             });
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+}
+
+function makePendingTaskActive(e) {
+    // Предотвращаем появление попапа с редактированием задачи
+    e.stopPropagation();
+
+    // Получаем id задачи
+    let icon = e.target;
+    let taskId = icon.closest("a").getAttribute("data-item-id");
+
+    // Получаем из cookie значение csrftoken
+    const csrftoken = getCookie("csrftoken");
+
+    fetch("/make-pending-task-active/", {
+        method: "POST",
+        body: JSON.stringify({ taskId }),
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+        },
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            let taskId = data.task_id;
+            let start = data.start;
+            let taskName = data.task_name;
+
+            let li = icon.closest("li");
+            li.remove();
+
+            let taskList = document.getElementById("upper__tasks__block__list");
+
+            let taskLi = document.createElement("li");
+            taskLi.classList.add(
+                "tasks__block__list__item",
+                "list__item",
+                "active__task"
+            );
+
+            let innerA = document.createElement("a");
+            innerA.href = "#edit-active-task-popup";
+            innerA.classList.add("list__item__link", "popup-link");
+            innerA.setAttribute("data-item-id", taskId);
+
+            let innerTitleDiv = document.createElement("div");
+            innerTitleDiv.className = "list__item__title";
+            innerTitleDiv.textContent = taskName;
+
+            let innerStrendDiv = document.createElement("div");
+            innerStrendDiv.className = "list__item__strend";
+            innerStrendDiv.textContent = `${start} - ${start}`;
+
+            let innerStrendTimeDiv = document.createElement("div");
+            innerStrendTimeDiv.className = "list__item__spendtime";
+
+            let pElement = document.createElement("p");
+            pElement.textContent = "00:00";
+
+            let iElement = document.createElement("i");
+            iElement.classList.add("_icon-stop-circle");
+            iElement.setAttribute("onclick", "finishActiveTask(event)");
+
+            innerStrendTimeDiv.appendChild(pElement);
+            innerStrendTimeDiv.appendChild(iElement);
+
+            innerA.appendChild(innerTitleDiv);
+            innerA.appendChild(innerStrendDiv);
+            innerA.appendChild(innerStrendTimeDiv);
+
+            innerA.addEventListener("click", bindTaskWithPopup);
+
+            taskLi.appendChild(innerA);
+
+            taskList.appendChild(taskLi);
+
+            let firstTask = taskList.firstChild;
+            if (firstTask !== null) {
+                // Если есть, вставляем новый элемент перед первым элементом в списке
+                taskList.insertBefore(taskLi, firstTask);
+            } else {
+                // Если список пуст, просто добавляем новый элемент в конец
+                taskList.appendChild(taskLi);
+            }
+
+            let activeTask = document.querySelector(".active__task");
+            let timerDiv = activeTask.querySelector(".list__item__spendtime p");
+            // Стартуем секундомер для новой задачи
+            startTimer(timerDiv);
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);
@@ -846,103 +944,6 @@ function deleteCompletedTask() {
             });
 
             sortAndGetTotalTime();
-        })
-        .catch((error) => {
-            console.error("Произошла ошибка:", error);
-        });
-}
-
-function makePendingTaskActive(e) {
-    // Предотвращаем появление попапа с редактированием задачи
-    e.stopPropagation();
-
-    // Получаем id задачи
-    let icon = e.target;
-    let taskId = icon.closest("a").getAttribute("data-item-id");
-
-    // Получаем из cookie значение csrftoken
-    const csrftoken = getCookie("csrftoken");
-
-    fetch("/make-pending-task-active/", {
-        method: "POST",
-        body: JSON.stringify({ taskId }),
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-        },
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Ошибка сети");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            let taskId = data.task_id;
-            let start = data.start;
-            let taskName = data.task_name;
-
-            let li = icon.closest("li");
-            li.remove();
-
-            let taskList = document.getElementById("upper__tasks__block__list");
-
-            let taskLi = document.createElement("li");
-            taskLi.classList.add(
-                "tasks__block__list__item",
-                "list__item",
-                "active__task"
-            );
-
-            let innerA = document.createElement("a");
-            innerA.href = "#edit-active-task-popup";
-            innerA.classList.add("list__item__link", "popup-link");
-            innerA.setAttribute("data-item-id", taskId);
-
-            let innerTitleDiv = document.createElement("div");
-            innerTitleDiv.className = "list__item__title";
-            innerTitleDiv.textContent = taskName;
-
-            let innerStrendDiv = document.createElement("div");
-            innerStrendDiv.className = "list__item__strend";
-            innerStrendDiv.textContent = `${start} - ${start}`;
-
-            let innerStrendTimeDiv = document.createElement("div");
-            innerStrendTimeDiv.className = "list__item__spendtime";
-
-            let pElement = document.createElement("p");
-            pElement.textContent = "00:00";
-
-            let iElement = document.createElement("i");
-            iElement.classList.add("_icon-stop-circle");
-            iElement.setAttribute("onclick", "finishActiveTask(event)");
-
-            innerStrendTimeDiv.appendChild(pElement);
-            innerStrendTimeDiv.appendChild(iElement);
-
-            innerA.appendChild(innerTitleDiv);
-            innerA.appendChild(innerStrendDiv);
-            innerA.appendChild(innerStrendTimeDiv);
-
-            innerA.addEventListener("click", bindTaskWithPopup);
-
-            taskLi.appendChild(innerA);
-
-            taskList.appendChild(taskLi);
-
-            let firstTask = taskList.firstChild;
-            if (firstTask !== null) {
-                // Если есть, вставляем новый элемент перед первым элементом в списке
-                taskList.insertBefore(taskLi, firstTask);
-            } else {
-                // Если список пуст, просто добавляем новый элемент в конец
-                taskList.appendChild(taskLi);
-            }
-
-            let activeTask = document.querySelector(".active__task");
-            let timerDiv = activeTask.querySelector(".list__item__spendtime p");
-            // Стартуем секундомер для новой задачи
-            startTimer(timerDiv);
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);
