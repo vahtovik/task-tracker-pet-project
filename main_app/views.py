@@ -221,73 +221,85 @@ def make_pending_task_active(request):
 @require_POST
 @login_required
 def add_completed_task(request):
-    task_name = request.POST.get('task_name')
-    task_start_time = request.POST.get('task_start')
-    task_end_time = request.POST.get('task_end')
-    try:
-        new_task = TaskList.objects.create(
-            user=request.user,
-            task_name=task_name,
-            is_completed=True,
-            completed_task_start_time=get_today_date_with_specified_time(task_start_time),
-            completed_task_end_time=get_today_date_with_specified_time(task_end_time),
-        )
+    form = CompletedTaskForm(request.POST)
+    if form.is_valid():
+        task_name = form.cleaned_data.get('task_name')
+        task_start_time = form.cleaned_data.get('task_start')
+        task_end_time = form.cleaned_data.get('task_end')
+        try:
+            new_task = TaskList.objects.create(
+                user=request.user,
+                task_name=task_name,
+                is_completed=True,
+                completed_task_start_time=get_today_date_with_specified_time(task_start_time),
+                completed_task_end_time=get_today_date_with_specified_time(task_end_time),
+            )
 
-        # Если у задачи определены время начала и окончания
-        if task_start_time and task_end_time:
-            task_duration = get_time_difference(new_task.completed_task_start_time, new_task.completed_task_end_time)
-        else:
-            task_duration = None
+            # Если у задачи определены время начала и окончания
+            if task_start_time and task_end_time:
+                task_duration = get_time_difference(new_task.completed_task_start_time, new_task.completed_task_end_time)
+            else:
+                task_duration = None
 
-        return JsonResponse({
-            'success': True,
-            'task_id': new_task.pk,
-            'task_start_time': new_task.completed_task_start_time,
-            'task_end_time': new_task.completed_task_end_time,
-            'task_duration': task_duration,
-        })
-    except IntegrityError as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error in task creating: {e}'}, status=400)
+            return JsonResponse({
+                'success': True,
+                'task_id': new_task.pk,
+                'task_start_time': new_task.completed_task_start_time,
+                'task_end_time': new_task.completed_task_end_time,
+                'task_duration': task_duration,
+            })
+        except IntegrityError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Error in task creating: {e}'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @require_POST
 @login_required
 def edit_completed_task(request, task_id):
-    task_name = request.POST.get('task_name')
-    task_start_time = request.POST.get('task_start')
-    task_end_time = request.POST.get('task_end')
-    try:
-        task = TaskList.objects.get(pk=task_id)
-        task.task_name = task_name
-        task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
-        task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
-        task.save()
-    except TaskList.DoesNotExist:
-        return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
+    form = CompletedTaskForm(request.POST)
+    if form.is_valid():
+        task_name = form.cleaned_data.get('task_name')
+        task_start_time = form.cleaned_data.get('task_start')
+        task_end_time = form.cleaned_data.get('task_end')
+        try:
+            task = TaskList.objects.get(pk=task_id)
+            if not task.is_completed:
+                return JsonResponse({'success': False, 'message': 'Provide id of a completed task'})
+            task.task_name = task_name
+            task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
+            task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
+            task.save()
+        except TaskList.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
 
-    # Если у задачи определены время начала и окончания
-    if task_start_time and task_end_time:
-        # Считаем разницу времени окончания и начала
-        task_duration = get_time_difference(task.completed_task_start_time, task.completed_task_end_time)
+        # Если у задачи определены время начала и окончания
+        if task_start_time and task_end_time:
+            # Считаем разницу времени окончания и начала
+            task_duration = get_time_difference(task.completed_task_start_time, task.completed_task_end_time)
+        else:
+            task_duration = None
+
+        return JsonResponse({
+            'success': True,
+            'task_id': task_id,
+            'start_time': task.get_completed_task_start_time(),
+            'end_time': task.get_completed_task_end_time(),
+            'task_duration': task_duration,
+        })
     else:
-        task_duration = None
-
-    return JsonResponse({
-        'success': True,
-        'task_id': task_id,
-        'start_time': task.get_completed_task_start_time(),
-        'end_time': task.get_completed_task_end_time(),
-        'task_duration': task_duration,
-    })
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 @require_POST
 @login_required
-def delete_completed_task(request, task_id):
+def remove_completed_task(request, task_id):
     try:
         task = TaskList.objects.get(pk=task_id)
+        if not task.is_completed:
+            return JsonResponse({'success': False, 'message': 'Provide id of a completed task'})
         task.delete()
         return JsonResponse({'success': True, 'task_id': task_id})
     except TaskList.DoesNotExist:

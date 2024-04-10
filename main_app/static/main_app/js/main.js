@@ -78,7 +78,7 @@ function addActiveTask() {
 
             let iElement = document.createElement("i");
             iElement.classList.add("_icon-stop-circle");
-            iElement.setAttribute("onclick", "finishActiveTask()");
+            iElement.setAttribute("onclick", "finishActiveTask(event)");
 
             innerStrendTimeDiv.appendChild(pElement);
             innerStrendTimeDiv.appendChild(iElement);
@@ -785,8 +785,8 @@ function editCompletedTask() {
         })
         .then((data) => {
             let task_id = data.task_id;
-            let start_time = data.start_time;
-            let end_time = data.end_time;
+            let start_time = data.start_time === null ? "" : data.start_time;
+            let end_time = data.end_time === null ? "" : data.end_time;
             let task_duration = data.task_duration;
 
             let tasksList = document.getElementById(
@@ -798,7 +798,6 @@ function editCompletedTask() {
 
                 listItems.forEach(function (item) {
                     // Проверка наличия атрибута "data-item-id" и сравнение его значения с желаемым
-
                     if (
                         item.hasAttribute("data-item-id") &&
                         item.getAttribute("data-item-id") == task_id
@@ -901,14 +900,14 @@ function editCompletedTask() {
         });
 }
 
-function deleteCompletedTask() {
+function removeCompletedTask() {
     // Собираем данные формы
     let form = document.getElementById("edit__completed__task__popup__form");
     let formData = new FormData(form);
     let taskId = formData.get("task_id");
 
     // Отправляем асинхронный запрос на сервер
-    fetch(`/delete-completed-task/${taskId}/`, {
+    fetch(`/remove-completed-task/${taskId}/`, {
         method: "POST",
         body: formData,
     })
