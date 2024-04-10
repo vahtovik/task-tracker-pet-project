@@ -57,9 +57,10 @@ function addActiveTask() {
             );
 
             let innerA = document.createElement("a");
-            innerA.href = "#";
-            innerA.classList.add("list__item__link");
+            innerA.href = "#edit-active-task-popup";
+            innerA.classList.add("list__item__link", "popup-link");
             innerA.setAttribute("data-item-id", taskId);
+            innerA.addEventListener("click", bindTaskWithPopup);
 
             let innerTitleDiv = document.createElement("div");
             innerTitleDiv.className = "list__item__title";
