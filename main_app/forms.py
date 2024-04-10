@@ -12,6 +12,10 @@ class TaskListForm(forms.ModelForm):
         }
 
 
+class ActiveTaskForm(forms.Form):
+    task_name = forms.CharField(max_length=255)
+
+
 class GetPendingTaskForm(forms.Form):
     task_name = forms.CharField(max_length=255)
 

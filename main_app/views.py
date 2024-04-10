@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from users.forms import ChangeLoginAndPasswordForm
-from .forms import TaskListForm, GetPendingTaskForm
+from .forms import TaskListForm, GetPendingTaskForm, ActiveTaskForm
 from .models import TaskList
 from .utils import get_completed_tasks_total_time, get_time_difference, get_today_date_with_specified_time, \
     parse_date, date_to_day_month_weekday, MONTHS
@@ -69,6 +69,7 @@ def add_active_task(request):
             task = form.save(commit=False)
             task.user = request.user
             task.is_active = True
+            task.active_task_start_time = timezone.now()
             task.save()
             start = datetime.now().strftime('%H:%M')
             return JsonResponse({'success': True, 'task_id': task.id, 'start': start})
@@ -102,13 +103,55 @@ def finish_active_task(request):
             task = TaskList.objects.get(pk=pk)
             task.is_active = False
             task.is_completed = True
-            task.completed_task_start_time = task.creation_time
+            task.completed_task_start_time = task.active_task_start_time
             task.completed_task_end_time = timezone.now()
             task.save()
             return JsonResponse({
                 'success': True,
                 'task_duration': get_time_difference(task.completed_task_start_time, task.completed_task_end_time),
             })
+        except TaskList.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Task with id {pk} does not exist'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'message': 'Provide task pk'}, status=400)
+
+
+@require_POST
+@login_required
+def edit_active_task(request, task_id):
+    form = ActiveTaskForm(request.POST)
+    if form.is_valid():
+        try:
+            task = TaskList.objects.get(pk=task_id)
+            task.task_name = form.cleaned_data.get('task_name')
+            task.save()
+            return JsonResponse({'success': True, 'task_id': task_id})
+        except TaskList.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@require_POST
+@login_required
+def make_active_task_pending(request):
+    pk = request.POST.get('task_id')
+    if pk:
+        try:
+            task = TaskList.objects.get(pk=pk)
+            task.is_active = False
+            task.active_task_start_time = None
+            task.order = 0
+            task.save()
+
+            # Получаем активные задачи не на таймере
+            tasks = TaskList.objects.filter(user=request.user, is_active=False, is_completed=False).order_by('order')
+            # Устанавливаем порядковый номер для каждой задачи
+            for num, task in enumerate(tasks, start=1):
+                task.order = num
+                task.save()
+
+            return JsonResponse({'success': True})
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'message': f'Task with id {pk} does not exist'}, status=400)
     else:
@@ -239,11 +282,12 @@ def change_pending_tasks_order(request):
 @login_required
 def make_pending_task_active(request):
     body_unicode = request.body.decode('utf-8')
-    pk = json.loads(body_unicode).get('itemId')
+    pk = json.loads(body_unicode).get('taskId')
     if pk:
         try:
             task = TaskList.objects.get(pk=pk)
             task.is_active = True
+            task.active_task_start_time = timezone.now()
             task_name = task.task_name
             task.save()
             return JsonResponse({

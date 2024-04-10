@@ -1,5 +1,5 @@
 addEventListener("DOMContentLoaded", () => {
-    const pendingTasks = document.querySelectorAll(".waiting-task");
+    const pendingTasks = document.querySelectorAll(".waiting__task");
 
     for (let i = 0; i < pendingTasks.length; i++) {
         pendingTasks[i]
@@ -108,7 +108,7 @@ addEventListener("DOMContentLoaded", () => {
 
     /* Sortable SECTION STARTS */
     const containerSelector = "ul.sortable__list";
-    const sortableElementsSelector = "ul.sortable__list > li.waiting-task";
+    const sortableElementsSelector = "ul.sortable__list > li.waiting__task";
     const sortbaleContainer = document.getElementById(
         "upper__tasks__block__list"
     );
@@ -123,7 +123,7 @@ addEventListener("DOMContentLoaded", () => {
                 "upper__tasks__block__list"
             );
             const waitTasks =
-                waitTasksContainer.querySelectorAll(".waiting-task");
+                waitTasksContainer.querySelectorAll(".waiting__task");
 
             let idList = [];
 
@@ -429,7 +429,7 @@ addEventListener("DOMContentLoaded", () => {
             : 0;
 
         if (popupInputTaskName && targetLinkTaskName) {
-            popupInputTaskName.value = targetLinkTaskName.textContent;
+            popupInputTaskName.value = targetLinkTaskName.textContent.trim();
         }
 
         if (

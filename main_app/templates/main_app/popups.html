@@ -1,3 +1,29 @@
+<div class="popup" id="edit-active-task-popup">
+    <div class="popup__body">
+        <div class="popup__content">
+            <a href="#" class="popup__close close-popup"><i class="_icon-close"></i></a>
+            <div class="popup__title">
+                <h3>Редактирование активной задачи</h3>
+            </div>
+            <form method="POST" class="popup__form" id="edit__active__popup__form">
+                {% csrf_token %}
+                <input type="hidden" name="task_id" value="">
+                <div class="popup__content-item popup__form-input">
+                    <input type="text" class="input task__name" name="task_name">
+                </div>
+                <div class="popup__content-item popup__form-btns">
+                    <button type="button" class="btn btn-white" onclick="editActiveTask()">
+                        <i class="_icon-save"></i>Сохранить
+                    </button>
+                    <button type="button" class="btn btn-black" onclick="makeActiveTaskPending()">
+                        <i class="_icon-trash"></i>Отменить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="popup" id="less-than-minute-popup">
     <div class="popup__body">
         <div class="popup__content">

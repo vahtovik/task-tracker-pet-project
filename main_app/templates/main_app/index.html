@@ -19,7 +19,9 @@
                 <ul class="tasks__block__list sortable__list" id="upper__tasks__block__list">
                     {% if active_task %}
                     <li class="tasks__block__list__item list__item active__task">
-                        <a href="#" class="list__item__link" data-item-id="{{ active_task.pk }}">
+                        <a href="#edit-active-task-popup"
+                           class="list__item__link popup-link"
+                           data-item-id="{{ active_task.pk }}">
                             <div class="list__item__title">
                                 {{ active_task }}
                             </div>
@@ -29,13 +31,13 @@
                             </div>
                             <div class="list__item__spendtime">
                                 <p>{{ active_task.get_active_task_time_difference }}</p>
-                                <i class="_icon-stop-circle" onclick="finishActiveTask()"></i>
+                                <i class="_icon-stop-circle" onclick="finishActiveTask(event)"></i>
                             </div>
                         </a>
                     </li>
                     {% endif %}
                     {% for task in pending_tasks %}
-                    <li class="tasks__block__list__item list__item waiting-task">
+                    <li class="tasks__block__list__item list__item waiting__task">
                         <a href="#edit-task-popup" class="list__item__link popup-link" data-item-id="{{ task.pk }}">
                             <div class="list__item__title">{{ task }}</div>
                             <div class="list__item__run">

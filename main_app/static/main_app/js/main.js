@@ -143,7 +143,7 @@ function addPendingTask() {
             taskLi.classList.add(
                 "tasks__block__list__item",
                 "list__item",
-                "waiting-task"
+                "waiting__task"
             );
 
             let innerA = document.createElement("a");
@@ -180,7 +180,10 @@ function addPendingTask() {
     form.querySelector(".input").value = "";
 }
 
-function finishActiveTask() {
+function finishActiveTask(event) {
+    // Предотвращаем появление попапа с редактированием задачи
+    event.stopPropagation();
+
     // Получаем первичный ключ активной задачи
     let taskId = document
         .querySelector(".active__task a")
@@ -261,6 +264,112 @@ function finishActiveTask() {
 
                     popupOpen(currPopup);
                 });
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+}
+
+function editActiveTask() {
+    // Собираем данные формы
+    let form = document.getElementById("edit__active__popup__form");
+    let formData = new FormData(form);
+    let taskName = form.task_name.value;
+    let taskId = formData.get("task_id");
+
+    // Проверяем, что текст задачи не пустой
+    if (isEmpty(taskName)) {
+        return;
+    }
+
+    // Отправляем асинхронный запрос на сервер
+    fetch(`/edit-active-task/${taskId}/`, {
+        method: "POST",
+        body: formData,
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            let taskId = data.task_id;
+            let tasksList = document.getElementById(
+                "upper__tasks__block__list"
+            );
+            let listItems = tasksList.querySelectorAll(
+                ".tasks__block__list__item a"
+            );
+
+            listItems.forEach(function (item) {
+                // Проверка наличия атрибута "data-item-id" и сравнение его значения с необходимым
+                if (
+                    item.hasAttribute("data-item-id") &&
+                    item.getAttribute("data-item-id") == taskId
+                ) {
+                    let divTitle = item.querySelector(".list__item__title");
+                    divTitle.textContent = taskName;
+
+                    let popupId = item.getAttribute("href").replace("#", "");
+                    let popupActive = document.getElementById(popupId);
+                    popupActive.querySelector("input[name='task_name']").value =
+                        "";
+                    popupClose(popupActive);
+                }
+            });
+        })
+        .catch((error) => {
+            console.error("Произошла ошибка:", error);
+        });
+}
+
+function makeActiveTaskPending() {
+    // Собираем данные формы
+    let form = document.getElementById("edit__active__popup__form");
+    let formData = new FormData(form);
+
+    fetch("/make-active-task-pending/", {
+        method: "POST",
+        body: formData,
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Ошибка сети");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            let liActiveTask = document.querySelector(".active__task");
+
+            liActiveTask.classList.remove("active__task");
+            liActiveTask.classList.add("waiting__task");
+
+            let strendElement = liActiveTask.querySelector(
+                ".list__item__strend"
+            );
+            var spendtimeElement = liActiveTask.querySelector(
+                ".list__item__spendtime"
+            );
+
+            if (strendElement) strendElement.remove();
+            if (spendtimeElement) spendtimeElement.remove();
+
+            let divListItemRun = document.createElement("div");
+            divListItemRun.classList.add("list__item__run");
+
+            let iconElement = document.createElement("i");
+            iconElement.classList.add("_icon-play");
+            iconElement.addEventListener("click", makePendingTaskActive);
+
+            divListItemRun.appendChild(iconElement);
+
+            let innerA = liActiveTask.querySelector(".list__item__link");
+            innerA.appendChild(divListItemRun);
+
+            let popupId = "edit-active-task-popup";
+            let popupActive = document.getElementById(popupId);
+            popupClose(popupActive);
         })
         .catch((error) => {
             console.error("Произошла ошибка:", error);
@@ -748,14 +857,14 @@ function makePendingTaskActive(e) {
 
     // Получаем id задачи
     let icon = e.target;
-    let itemId = icon.closest("a").getAttribute("data-item-id");
+    let taskId = icon.closest("a").getAttribute("data-item-id");
 
     // Получаем из cookie значение csrftoken
     const csrftoken = getCookie("csrftoken");
 
     fetch("/make-pending-task-active/", {
         method: "POST",
-        body: JSON.stringify({ itemId }),
+        body: JSON.stringify({ taskId }),
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": csrftoken,
@@ -785,8 +894,8 @@ function makePendingTaskActive(e) {
             );
 
             let innerA = document.createElement("a");
-            innerA.href = "#";
-            innerA.classList.add("list__item__link");
+            innerA.href = "#edit-active-task-popup";
+            innerA.classList.add("list__item__link", "popup-link");
             innerA.setAttribute("data-item-id", taskId);
 
             let innerTitleDiv = document.createElement("div");
@@ -805,7 +914,7 @@ function makePendingTaskActive(e) {
 
             let iElement = document.createElement("i");
             iElement.classList.add("_icon-stop-circle");
-            iElement.setAttribute("onclick", "finishActiveTask()");
+            iElement.setAttribute("onclick", "finishActiveTask(event)");
 
             innerStrendTimeDiv.appendChild(pElement);
             innerStrendTimeDiv.appendChild(iElement);
@@ -813,6 +922,8 @@ function makePendingTaskActive(e) {
             innerA.appendChild(innerTitleDiv);
             innerA.appendChild(innerStrendDiv);
             innerA.appendChild(innerStrendTimeDiv);
+
+            innerA.addEventListener("click", bindTaskWithPopup);
 
             taskLi.appendChild(innerA);
 
