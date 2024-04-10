@@ -13,6 +13,7 @@ class TaskList(models.Model):
     is_active = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
     order = models.IntegerField(default=100000)
+    active_task_start_time = models.DateTimeField(null=True, blank=True)
     completed_task_start_time = models.DateTimeField(null=True, blank=True)
     completed_task_end_time = models.DateTimeField(null=True, blank=True)
 
@@ -36,7 +37,7 @@ class TaskList(models.Model):
         """
         Возвращает время начала активной задачи в формате HH:MM
         """
-        local_time = timezone.localtime(self.creation_time, timezone=timezone.get_current_timezone())
+        local_time = timezone.localtime(self.active_task_start_time, timezone=timezone.get_current_timezone())
         return local_time.strftime('%H:%M')
 
     @staticmethod
@@ -50,7 +51,7 @@ class TaskList(models.Model):
         """
         Возвращает разницу во времени между текущим временем и временем начала активной задачи
         """
-        time_difference = timezone.now() - self.creation_time
+        time_difference = timezone.now() - self.active_task_start_time
         return self.timedelta_to_minutes_and_seconds(time_difference)
 
     def get_completed_task_start_time(self) -> Optional[str]:
