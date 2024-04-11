@@ -183,6 +183,7 @@ function addPendingTask() {
 
 function finishActiveTask(event) {
     // Предотвращаем появление попапа с редактированием задачи
+    event.preventDefault();
     event.stopPropagation();
 
     // Получаем первичный ключ активной задачи
@@ -480,6 +481,7 @@ function removePendingTask() {
 
 function makePendingTaskActive(e) {
     // Предотвращаем появление попапа с редактированием задачи
+    e.preventDefault();
     e.stopPropagation();
 
     // Получаем id задачи

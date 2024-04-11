@@ -1,6 +1,17 @@
 addEventListener("DOMContentLoaded", () => {
-    const pendingTasks = document.querySelectorAll(".waiting__task");
+    const forms = document.getElementsByTagName("form");
+    for (let i = 0; i < forms.length; i++) {
+        if (!forms[i].classList.contains("auth__form")) {
+            forms[i].addEventListener("keypress", function (e) {
+                let key = e.key;
+                if (key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+        }
+    }
 
+    const pendingTasks = document.querySelectorAll(".waiting__task");
     for (let i = 0; i < pendingTasks.length; i++) {
         pendingTasks[i]
             .querySelector("._icon-play")
@@ -112,79 +123,80 @@ addEventListener("DOMContentLoaded", () => {
     const sortbaleContainer = document.getElementById(
         "upper__tasks__block__list"
     );
-    const sortable = new Sortable(sortbaleContainer, {
-        draggable: sortableElementsSelector,
-        onEnd: function () {
-            document
-                .querySelectorAll(".sortable-mirror")
-                .forEach((e) => e.remove());
+    if (sortbaleContainer) {
+        const sortable = new Sortable(sortbaleContainer, {
+            draggable: sortableElementsSelector,
+            onEnd: function () {
+                document
+                    .querySelectorAll(".sortable-mirror")
+                    .forEach((e) => e.remove());
 
-            const waitTasksContainer = document.getElementById(
-                "upper__tasks__block__list"
-            );
-            const waitTasks =
-                waitTasksContainer.querySelectorAll(".waiting__task");
+                const waitTasksContainer = document.getElementById(
+                    "upper__tasks__block__list"
+                );
+                const waitTasks =
+                    waitTasksContainer.querySelectorAll(".waiting__task");
 
-            let idList = [];
+                let idList = [];
 
-            for (let index = 0; index < waitTasks.length; index++) {
-                const task = waitTasks[index];
-                // if (!task.classList.contains('draggable--over') && !task.classList.contains('draggable-mirror')) {
-                let link = task.querySelector(".list__item__link");
-                const attrId = link.getAttribute("data-item-id");
-                idList.push({ id: attrId, orderNum: index + 1 });
-                // }
-            }
+                for (let index = 0; index < waitTasks.length; index++) {
+                    const task = waitTasks[index];
 
-            // Получаем из cookie значение csrftoken
-            const csrftoken = getCookie("csrftoken");
+                    let link = task.querySelector(".list__item__link");
+                    const attrId = link.getAttribute("data-item-id");
+                    idList.push({ id: attrId, orderNum: index + 1 });
+                }
 
-            fetch("/change-pending-tasks-order/", {
-                method: "POST",
-                body: JSON.stringify({ idList }),
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
-                },
-            })
-                .then((response) => response.json())
-                .then((data) => {});
-        },
-    });
+                // Получаем из cookie значение csrftoken
+                const csrftoken = getCookie("csrftoken");
 
+                fetch("/change-pending-tasks-order/", {
+                    method: "POST",
+                    body: JSON.stringify({ idList }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                })
+                    .then((response) => response.json())
+                    .then((data) => {});
+            },
+        });
+    }
     /* Sortable SECTION STARTS */
 
     /* WATCHER SECTION STARTS */
     const watchElem = document.getElementById("upper__tasks__block__list");
+    if (watchElem) {
+        function hasActiveTask() {
+            const liElements = watchElem.querySelectorAll(".list__item");
 
-    function hasActiveTask() {
-        const liElements = watchElem.querySelectorAll(".list__item");
-
-        for (const li of liElements) {
-            if (li.classList.contains("active__task")) {
-                if (watchElem.classList.contains("enable-hover")) {
-                    watchElem.classList.remove("enable-hover");
+            for (const li of liElements) {
+                if (li.classList.contains("active__task")) {
+                    if (watchElem.classList.contains("enable-hover")) {
+                        watchElem.classList.remove("enable-hover");
+                        return;
+                    }
                     return;
                 }
-                return;
             }
+
+            if (!watchElem.classList.contains("enable-hover")) {
+                watchElem.classList.add("enable-hover");
+            }
+
+            return;
         }
 
-        if (!watchElem.classList.contains("enable-hover")) {
-            watchElem.classList.add("enable-hover");
-        }
+        // Initial call
+        hasActiveTask();
 
-        return;
+        // Create an observer instance linked to the callback function
+        const observer = new MutationObserver(hasActiveTask);
+
+        // Start observing the target node for configured mutations
+        observer.observe(watchElem, { childList: true, subtree: true });
     }
-
-    // Initial call
-    hasActiveTask();
-
-    // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(hasActiveTask);
-
-    // Start observing the target node for configured mutations
-    observer.observe(watchElem, { childList: true, subtree: true });
     /* WATCHER SECTION STARTS */
 
     /* TIMER SECTION STARTS */
@@ -246,55 +258,50 @@ addEventListener("DOMContentLoaded", () => {
 
     /* ONLY TODAY SECTION STARTS */
     const onlyTodayBtn = document.querySelector(".today-only");
-    onlyTodayBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const taskBlocks = document.querySelectorAll(".tasks__block");
-        if (taskBlocks.length > 2) {
-            for (let i = 2; i < taskBlocks.length; i++) {
-                taskBlocks[i].remove();
+    if (onlyTodayBtn) {
+        onlyTodayBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const taskBlocks = document.querySelectorAll(".tasks__block");
+            if (taskBlocks.length > 2) {
+                for (let i = 2; i < taskBlocks.length; i++) {
+                    taskBlocks[i].remove();
+                }
+            }
+        });
+
+        const tasks = document.querySelector(".tasks");
+        const config = { childList: true, subtree: true };
+
+        function onlyTodayClassChange() {
+            const taskBlocks = document.querySelectorAll(".tasks__block");
+            if (taskBlocks.length > 2) {
+                onlyTodayBtn.classList.remove("display-none");
+            } else {
+                onlyTodayBtn.classList.add("display-none");
             }
         }
-    });
 
-    const tasks = document.querySelector(".tasks");
-    const config = { childList: true, subtree: true };
+        onlyTodayClassChange();
 
-    function onlyTodayClassChange() {
-        const taskBlocks = document.querySelectorAll(".tasks__block");
-        if (taskBlocks.length > 2) {
-            console.log("More than two elements detected!");
-            // Add class to the target element
-            // For example:
-            onlyTodayBtn.classList.remove("display-none");
-        } else {
-            // Remove class if there are two or fewer elements
-            onlyTodayBtn.classList.add("display-none");
-        }
+        // Callback function to execute when mutations are observed
+        const callback = function (mutationsList, observer) {
+            for (const mutation of mutationsList) {
+                if (mutation.type === "childList") {
+                    onlyTodayClassChange();
+                }
+            }
+        };
+
+        // Create an observer instance linked to the callback function
+        const observer1 = new MutationObserver(callback);
+
+        // Start observing the parent node for configured mutations
+        observer1.observe(tasks, config);
     }
-
-    onlyTodayClassChange();
-
-    // Callback function to execute when mutations are observed
-    const callback = function (mutationsList, observer) {
-        for (const mutation of mutationsList) {
-            if (mutation.type === "childList") {
-                onlyTodayClassChange();
-            }
-        }
-    };
-
-    // Create an observer instance linked to the callback function
-    const observer1 = new MutationObserver(callback);
-
-    // Start observing the parent node for configured mutations
-    observer1.observe(tasks, config);
-
     /* ONLY TODAY SECTION ENDS */
 
     /* INPUT VALIDATION SECTION STARTS */
-    const timeRangeBlocks = document.querySelectorAll(".popup__form-range"); //input[name="task_start"]
-    // const endTimeInput = document.querySelector('.popup__form-range__inputs input[type="text"]:last-of-type');
-    // const timeDifferenceDiv = document.querySelector('.popup__form-range__time');
+    const timeRangeBlocks = document.querySelectorAll(".popup__form-range");
 
     let startTimeInput, endTimeInput, timeDifferenceDiv;
 
@@ -357,7 +364,6 @@ addEventListener("DOMContentLoaded", () => {
 
         if (endTime < startTime) {
             timeDifferenceDiv.textContent = "";
-            //timeDifferenceDiv.textContent = 'End time should be greater than start time';
             return;
         }
         const timeDifference = calculateDifference(startTime, endTime);
