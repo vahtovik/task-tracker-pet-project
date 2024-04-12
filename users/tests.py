@@ -8,9 +8,9 @@ from django.contrib.auth.models import User
 class RegistrationTestCase(TestCase):
     def setUp(self):
         self.data = {
-            'username': 'testuser',
-            'password1': 'testpassword',
-            'password2': 'testpassword',
+            'username': 'test_user',
+            'password1': 'test_password',
+            'password2': 'test_password',
         }
 
     def test_get_register_page(self):
@@ -33,7 +33,7 @@ class RegistrationTestCase(TestCase):
         self.assertContains(response, 'Обязательное поле')
 
     def test_duplicate_username(self):
-        User.objects.create_user(username='testuser', password='testpassword')
+        User.objects.create_user(username='test_user', password='test_password')
         path = reverse('users:register')
         response = self.client.post(path, self.data)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -54,8 +54,44 @@ class RegistrationTestCase(TestCase):
             self.assertContains(response, error_message)
 
     def test_password_missmatch(self):
-        self.data['password2'] = 'testpassword_to_fail'
+        self.data['password2'] = 'test_password_to_fail'
         path = reverse('users:register')
         response = self.client.post(path, self.data)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, 'Пароли не совпадают')
+
+
+class AuthenticationTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+
+    def test_get_login_page(self):
+        path = reverse('users:login')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, 'users/login.html')
+
+    def test_login(self):
+        path = reverse('users:login')
+        response = self.client.post(path, {'username': 'test_user', 'password': 'test_password'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, reverse('main_app:index'))
+
+    def test_failed_login(self):
+        path = reverse('users:login')
+        response = self.client.post(path, {'username': 'test_user', 'password': 'wrong_password'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, 'Неверный логин или пароль')
+
+    def test_logout(self):
+        self.client.login(username='test_user', password='test_password')
+        path = reverse('users:logout')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, reverse('users:login'))
+
+    def test_login_required_page_access(self):
+        self.client.login(username='test_user', password='test_password')
+        path = reverse('main_app:index')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
