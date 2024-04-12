@@ -22,6 +22,19 @@ class RegisterUserForm(UserCreationForm):
         model = get_user_model()
         fields = ('username', 'password1', 'password2')
 
+    def clean_password1(self):
+        password1 = self.cleaned_data.get('password1')
+        if len(password1) < 8:
+            self.add_error('password1', '')
+        try:
+            password_validation.validate_password(password1)
+        except forms.ValidationError as error:
+            self.add_error('password1', '')
+        if password1.isdigit():
+            self.add_error('password1', '')
+
+        return password1
+
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
