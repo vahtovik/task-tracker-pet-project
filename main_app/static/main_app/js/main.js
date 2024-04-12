@@ -980,12 +980,18 @@ function editCredentials() {
             } else {
                 // Ищем все теги ul в форме
                 let ulElements = form.getElementsByTagName("ul");
-
                 // Проходимся по всем найденным элементам ul и удаляем их
                 while (ulElements.length > 0) {
                     ulElements[0].parentNode.removeChild(ulElements[0]);
                     ulElements = form.getElementsByTagName("ul");
                 }
+
+                // Ищем все inputs с ошибкой
+                let inputElements = form.querySelectorAll(".error");
+                // Проходимся по всем inputs и удаляем класс error
+                inputElements.forEach((element) => {
+                    element.classList.remove("error");
+                });
 
                 // Проходимся по каждой ошибке
                 for (const field in data.errors) {
