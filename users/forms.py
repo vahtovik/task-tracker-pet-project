@@ -27,7 +27,7 @@ class RegisterUserForm(UserCreationForm):
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
             self.add_error('password1', '')
-            raise forms.ValidationError('Пароли не совпадают', code='password_mismatch')
+            raise forms.ValidationError('Пароли не совпадают.', code='password_mismatch')
         return password2
 
 
@@ -42,7 +42,7 @@ class ChangeLoginAndPasswordForm(forms.Form):
         username = self.cleaned_data.get('username')
         if username:
             if User.objects.filter(username=username).exists():
-                raise forms.ValidationError('Пользователь с таким именем уже существует')
+                raise forms.ValidationError('Пользователь с таким именем уже существует.')
         return username
 
     def clean_new_password2(self):
@@ -65,9 +65,12 @@ class ChangeLoginAndPasswordForm(forms.Form):
         if new_password1 and new_password2:
             if new_password1 != new_password2:
                 self.add_error('new_password1', ' ')
+                self.add_error('new_password2', 'Пароли не совпадают.')
 
-        if (new_password1 and not new_password2) or (not new_password1 and new_password2):
-            self.add_error('new_password1', ' ')
-            self.add_error('new_password2', 'Необходимо заполнить оба поля пароля')
+        if new_password1 and not new_password2:
+            self.add_error('new_password2', 'Обязательное поле.')
+
+        if not new_password1 and new_password2:
+            self.add_error('new_password1', 'Обязательное поле.')
 
         return cleaned_data

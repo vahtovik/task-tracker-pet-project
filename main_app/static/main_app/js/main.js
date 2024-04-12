@@ -989,15 +989,15 @@ function editCredentials() {
 
                 // Проходимся по каждой ошибке
                 for (const field in data.errors) {
+                    let inputElement = form.querySelector(
+                        `input[name="${field}"]`
+                    );
+                    if (inputElement) {
+                        inputElement.classList.add("error");
+                    }
+
                     // Проверяем, что сообщение об ошибке не пустое
                     if (data.errors[field] !== " ") {
-                        let inputElement = form.querySelector(
-                            `input[name="${field}"]`
-                        );
-                        if (inputElement) {
-                            inputElement.classList.add("error");
-                        }
-
                         let ulErrorBlock = document.createElement("ul");
                         ulErrorBlock.className = "profile__edit__errors";
 
