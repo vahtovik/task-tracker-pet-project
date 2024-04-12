@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 
@@ -11,6 +11,18 @@ class LoginUserForm(AuthenticationForm):
     class Meta:
         model = get_user_model()
         fields = ('username', 'password')
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if user is None:
+                self.add_error('username', '')
+                self.add_error('password', '')
+                raise forms.ValidationError('Неверный логин или пароль.')
+
+        return super().clean()
 
 
 class RegisterUserForm(UserCreationForm):

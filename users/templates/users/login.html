@@ -13,6 +13,9 @@
                            class="input auth__input {% if field.errors %}error{% endif %}"
                            placeholder="{{ field.field.widget.attrs.placeholder }}">
                     {{ field.errors }}
+                    {% if forloop.last %}
+                    {{ form.non_field_errors }}
+                    {% endif %}
                 </div>
                 {% endfor %}
                 <button type="submit" class="btn btn-white">Войти</button>
