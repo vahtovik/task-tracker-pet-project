@@ -1,0 +1,47 @@
+[
+  {
+    "model": "main_app.tasklist",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "task_name": "задача в ожидании 1",
+      "creation_time": "2024-04-15T20:39:40.708Z",
+      "is_active": false,
+      "is_completed": false,
+      "order": 100000,
+      "active_task_start_time": null,
+      "completed_task_start_time": null,
+      "completed_task_end_time": null
+    }
+  },
+  {
+    "model": "main_app.tasklist",
+    "pk": 3,
+    "fields": {
+      "user": 1,
+      "task_name": "задача в ожидании 2",
+      "creation_time": "2024-04-15T20:39:43.385Z",
+      "is_active": false,
+      "is_completed": false,
+      "order": 100000,
+      "active_task_start_time": null,
+      "completed_task_start_time": null,
+      "completed_task_end_time": null
+    }
+  },
+  {
+    "model": "main_app.tasklist",
+    "pk": 4,
+    "fields": {
+      "user": 1,
+      "task_name": "задача в ожидании 3",
+      "creation_time": "2024-04-15T20:39:46.183Z",
+      "is_active": false,
+      "is_completed": false,
+      "order": 100000,
+      "active_task_start_time": null,
+      "completed_task_start_time": null,
+      "completed_task_end_time": null
+    }
+  }
+]
