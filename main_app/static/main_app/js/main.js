@@ -1077,7 +1077,7 @@ function loadNextCompletedTasks() {
 
             if (
                 !data.completed_tasks_with_time.length &&
-                !data.completed_tasks_no_time.length
+                !data.completed_tasks_without_time.length
             ) {
                 return;
             }
@@ -1139,7 +1139,7 @@ function loadNextCompletedTasks() {
                 blockList.appendChild(listItem);
             });
 
-            data.completed_tasks_no_time.forEach((task) => {
+            data.completed_tasks_without_time.forEach((task) => {
                 let listItem = document.createElement("li");
                 listItem.classList.add(
                     "tasks__block__list__item",

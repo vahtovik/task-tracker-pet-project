@@ -35,7 +35,7 @@ def index(request):
     completed_tasks_total_time = get_completed_tasks_total_time(completed_tasks_with_time)
 
     # Получаем выполненные задачи без временных интервалов
-    completed_tasks_no_time = TaskList.objects.filter(
+    completed_tasks_without_time = TaskList.objects.filter(
         user=request.user,
         is_completed=True,
         creation_time__date=timezone.now().date(),
@@ -50,7 +50,7 @@ def index(request):
         'pending_tasks': pending_tasks,
         'completed_tasks_with_time': completed_tasks_with_time,
         'completed_tasks_total_time': completed_tasks_total_time,
-        'completed_tasks_no_time': completed_tasks_no_time,
+        'completed_tasks_without_time': completed_tasks_without_time,
         'month_day': timezone.now().date().day,
         'month': MONTHS.get(timezone.now().date().month),
         'form': form,
@@ -365,7 +365,7 @@ def load_next_completed_tasks(request):
             formatted_completed_tasks_with_time.append(formatted_task)
 
         # Получаем выполненные задачи без временных интервалов
-        completed_tasks_no_time = TaskList.objects.filter(
+        completed_tasks_without_time = TaskList.objects.filter(
             user=request.user,
             is_completed=True,
             creation_time__date=next_tasks_date,
@@ -377,7 +377,7 @@ def load_next_completed_tasks(request):
             'title_date': date_to_day_month_weekday(next_tasks_date),
             'completed_tasks_with_time': formatted_completed_tasks_with_time,
             'completed_tasks_total_time': completed_tasks_total_time,
-            'completed_tasks_no_time': list(completed_tasks_no_time)
+            'completed_tasks_without_time': list(completed_tasks_without_time)
         })
     else:
         return JsonResponse({'success': False, 'message': 'Provide date'}, status=400)

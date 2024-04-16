@@ -78,7 +78,7 @@
                         </a>
                     </li>
                     {% endfor %}
-                    {% for task in completed_tasks_no_time %}
+                    {% for task in completed_tasks_without_time %}
                     <li class="tasks__block__list__item list__item done">
                         <a href="#edit-completed-task-popup" class="list__item__link popup-link"
                            data-item-id="{{ task.pk }}">
