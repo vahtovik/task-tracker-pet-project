@@ -187,6 +187,7 @@ class FinishActiveTaskTestCase(TestCase):
         response = self.client.post(path, json.dumps({'taskId': self.active_task.pk}), content_type='application/json')
         self.active_task.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
         self.assertFalse(self.active_task.is_active)
         self.assertTrue(self.active_task.is_completed)
 
@@ -196,16 +197,59 @@ class FinishActiveTaskTestCase(TestCase):
         path = reverse('main_app:finish-active-task')
         response = self.client.post(path, json.dumps({'taskId': self.active_task.pk}), content_type='application/json')
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Provide id of an active task')
 
     def test_finish_active_task_with_invalid_id(self):
         path = reverse('main_app:finish-active-task')
         response = self.client.post(path, json.dumps({'taskId': 999}), content_type='application/json')
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
 
     def test_finish_active_task_no_task_id(self):
         path = reverse('main_app:finish-active-task')
         response = self.client.post(path, content_type='application/json')
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Provide task pk')
+
+
+class EditActiveTaskTestCase(TestCase):
+    fixtures = ['user.json', 'active_task.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.active_task = TaskList.objects.filter(user=self.user, is_active=True).first()
+
+    def test_edit_active_task_success(self):
+        path = reverse('main_app:edit-active-task', args=[self.active_task.pk])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.active_task.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertEqual(self.active_task.task_name, 'Updated Task')
+
+    def test_edit_active_task_with_invalid_id(self):
+        path = reverse('main_app:edit-active-task', args=[999])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
+
+    def test_edit_inactive_task(self):
+        self.active_task.is_active = False
+        self.active_task.save()
+        path = reverse('main_app:edit-active-task', args=[self.active_task.pk])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide id of an active task')
+
+    def test_edit_active_task_with_invalid_data(self):
+        path = reverse('main_app:edit-active-task', args=[self.active_task.pk])
+        response = self.client.post(path, {})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
