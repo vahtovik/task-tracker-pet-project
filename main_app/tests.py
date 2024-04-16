@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from main_app.models import TaskList
+from main_app.views import add_pending_task
 
 
 class IndexViewTests(TestCase):
@@ -135,5 +136,38 @@ class AddActiveTaskTestCase(TestCase):
     def test_add_active_task_requires_authentication(self):
         self.client.logout()
         path = reverse('main_app:add-active-task')
+        response = self.client.post(path, {'task_name': 'Test Task'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+
+class AddPendingTaskTestCase(TestCase):
+    fixtures = ['user.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+
+    def test_add_pending_task_with_valid_data(self):
+        path = reverse('main_app:add-pending-task')
+        response = self.client.post(path, {'task_name': 'Test Task'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertTrue(TaskList.objects.filter(user=self.user, task_name='Test Task', is_active=False).exists())
+
+    def test_add_pending_task_with_invalid_data(self):
+        path = reverse('main_app:add-pending-task')
+        response = self.client.post(path, {'task_name': ''})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
+
+    def test_add_pending_task_requires_post_method(self):
+        path = reverse('main_app:add-pending-task')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_add_pending_task_requires_authentication(self):
+        self.client.logout()
+        path = reverse('main_app:add-pending-task')
         response = self.client.post(path, {'task_name': 'Test Task'})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
