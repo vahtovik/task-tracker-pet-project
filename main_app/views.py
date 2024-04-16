@@ -100,7 +100,7 @@ def finish_active_task(request):
         try:
             task = TaskList.objects.get(pk=pk)
             if not task.is_active:
-                return JsonResponse({'success': False, 'message': 'Provide id of an active task'})
+                return JsonResponse({'success': False, 'message': 'Provide id of an active task'}, status=400)
             task.is_active = False
             task.is_completed = True
             task.completed_task_start_time = task.active_task_start_time
