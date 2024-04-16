@@ -90,3 +90,50 @@ class IndexViewTests(TestCase):
             completed_tasks_without_time,
             ordered=False
         )
+
+
+class AddActiveTaskTestCase(TestCase):
+    fixtures = ['user.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+
+    def test_add_active_task_with_valid_data(self):
+        path = reverse('main_app:add-active-task')
+        response = self.client.post(path, {'task_name': 'Test Task'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue('success' in response.json())
+        self.assertTrue(response.json()['success'])
+        self.assertTrue('task_id' in response.json())
+        self.assertTrue('start' in response.json())
+
+    def test_add_active_task_with_invalid_data(self):
+        path = reverse('main_app:add-active-task')
+        response = self.client.post(path, {'task_name': ''})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertTrue('success' in response.json())
+        self.assertFalse(response.json()['success'])
+        self.assertTrue('errors' in response.json())
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
+
+    def test_add_active_task_when_active_task_already_exists(self):
+        path = reverse('main_app:add-active-task')
+        self.client.post(path, {'task_name': 'Existing Task'})
+        response = self.client.post(path, {'task_name': 'New Task'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue('success' in response.json())
+        self.assertFalse(response.json()['success'])
+        self.assertTrue('message' in response.json())
+        self.assertEqual(response.json()['message'], 'There is already an active task')
+
+    def test_add_active_task_requires_post_method(self):
+        path = reverse('main_app:add-active-task')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_add_active_task_requires_authentication(self):
+        self.client.logout()
+        path = reverse('main_app:add-active-task')
+        response = self.client.post(path, {'task_name': 'Test Task'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
