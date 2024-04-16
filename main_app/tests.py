@@ -304,3 +304,52 @@ class MakeActiveTaskPendingTestCase(TestCase):
         path = reverse('main_app:make-active-task-pending')
         response = self.client.post(path, {})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+
+class EditPendingTaskTestCase(TestCase):
+    fixtures = ['user.json', 'active_task.json', 'pending_tasks.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.pending_task = TaskList.objects.filter(user=self.user, is_active=False, is_completed=False).first()
+        self.active_task = TaskList.objects.filter(user=self.user, is_active=True).first()
+
+    def test_edit_pending_task_success(self):
+        path = reverse('main_app:edit-pending-task', args=[self.pending_task.pk])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertEqual(TaskList.objects.get(pk=self.pending_task.id).task_name, 'Updated Task')
+
+    def test_edit_pending_task_invalid_data(self):
+        path = reverse('main_app:edit-pending-task', args=[self.pending_task.pk])
+        response = self.client.post(path, {'task_name': ''})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
+
+    def test_edit_pending_task_with_invalid_id(self):
+        path = reverse('main_app:edit-pending-task', args=[999])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
+
+    def test_edit_pending_task_with_active_task_given(self):
+        path = reverse('main_app:edit-pending-task', args=[self.active_task.pk])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide id of a pending task')
+
+    def test_edit_pending_task_get(self):
+        path = reverse('main_app:edit-pending-task', args=[self.pending_task.pk])
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_edit_pending_task_not_logged_in(self):
+        self.client.logout()
+        path = reverse('main_app:edit-pending-task', args=[self.pending_task.pk])
+        response = self.client.post(path, {'task_name': 'Updated Task'})
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)

@@ -169,7 +169,7 @@ def edit_pending_task(request, task_id):
         try:
             task = TaskList.objects.get(pk=task_id)
             if task.is_active:
-                return JsonResponse({'success': False, 'message': 'Provide id of a pending task'})
+                return JsonResponse({'success': False, 'message': 'Provide id of a pending task'}, status=400)
             task.task_name = form.cleaned_data.get('task_name')
             task.save()
             return JsonResponse({'success': True, 'task_id': task_id})
