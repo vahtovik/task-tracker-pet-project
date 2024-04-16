@@ -271,7 +271,7 @@ class MakeActiveTaskPendingTestCase(TestCase):
         self.assertTrue(response.json()['success'])
         self.assertFalse(self.active_task.is_active)
 
-    def test_inactive_task(self):
+    def test_make_active_task_pending_when_task_already_pending(self):
         self.active_task.is_active = False
         self.active_task.save()
         path = reverse('main_app:make-active-task-pending')
@@ -395,4 +395,56 @@ class RemovePendingTaskTestCase(TestCase):
         self.client.logout()
         path = reverse('main_app:remove-pending-task', args=[self.pending_task.pk])
         response = self.client.post(path)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+
+class MakePendingTaskActiveTestCase(TestCase):
+    fixtures = ['user.json', 'active_task.json', 'pending_tasks.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.pending_task = TaskList.objects.filter(user=self.user, is_active=False, is_completed=False).first()
+        self.active_task = TaskList.objects.filter(user=self.user, is_active=True).first()
+
+    def test_make_pending_task_active_success(self):
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.post(path, json.dumps({'taskId': self.pending_task.pk}), content_type='application/json')
+        self.pending_task.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertTrue(self.pending_task.is_active)
+
+    def test_make_pending_task_active_when_task_already_active(self):
+        self.pending_task.is_active = True
+        self.pending_task.save()
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.post(path, json.dumps({'taskId': self.pending_task.pk}), content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide id of a pending task')
+
+    def test_make_pending_task_active_with_invalid_id(self):
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.post(path, json.dumps({'taskId': 999}), content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
+
+    def test_make_pending_task_active_no_task_id(self):
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.post(path, content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide task pk')
+
+    def test_make_pending_task_active_get(self):
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def test_make_pending_task_active_not_logged_in(self):
+        self.client.logout()
+        path = reverse('main_app:make-pending-task-active')
+        response = self.client.post(path, {})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)

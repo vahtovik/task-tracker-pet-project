@@ -201,7 +201,7 @@ def make_pending_task_active(request):
         try:
             task = TaskList.objects.get(pk=pk)
             if task.is_active:
-                return JsonResponse({'success': False, 'message': 'Provide id of a pending task'})
+                return JsonResponse({'success': False, 'message': 'Provide id of a pending task'}, status=400)
             task.is_active = True
             task.active_task_start_time = timezone.now()
             task_name = task.task_name
