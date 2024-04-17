@@ -18,4 +18,8 @@ class CompletedTaskForm(forms.Form):
         if (task_start and not task_end) or (not task_start and task_end):
             raise forms.ValidationError('Provide both task start and end time')
 
+        # Проверяем, что время окончания задачи превышает время начала
+        if task_start > task_end:
+            raise forms.ValidationError('End time must be greater than start time')
+
         return cleaned_data

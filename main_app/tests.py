@@ -448,3 +448,77 @@ class MakePendingTaskActiveTestCase(TestCase):
         path = reverse('main_app:make-pending-task-active')
         response = self.client.post(path, {})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+
+class AddCompletedTaskTestCase(TestCase):
+    fixtures = ['user.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+
+    def test_add_completed_task_success(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '11:00',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertTrue(TaskList.objects.filter(user=self.user, task_name='Test Task').exists())
+
+    def test_add_completed_task_with_only_one_time_provided(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['__all__'], ['Provide both task start and end time'])
+
+    def test_add_completed_task_with_empty_task_name(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': '',
+            'task_start': '10:00',
+            'task_end': '11:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
+
+    def test_add_completed_task_with_wrong_hours(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '25:00',
+            'task_end': '26:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['error'], 'Error in task creating: hour must be in 0..23')
+
+    def test_add_completed_task_with_wrong_minutes(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:60',
+            'task_end': '11:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['error'], 'Error in task creating: minute must be in 0..59')
+
+    def test_add_completed_task_with_end_time_greater_than_start_time(self):
+        path = reverse('main_app:add-completed-task')
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '11:00',
+            'task_end': '10:00',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['__all__'], ['End time must be greater than start time'])
