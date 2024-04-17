@@ -1194,5 +1194,8 @@ function loadNextCompletedTasks() {
 
 const downloadMore = document.querySelector(".download-more");
 if (downloadMore) {
-    downloadMore.addEventListener("click", loadNextCompletedTasks);
+    downloadMore.addEventListener("click", function (event) {
+        event.preventDefault();
+        loadNextCompletedTasks();
+    });
 }
