@@ -662,3 +662,32 @@ class RemoveCompletedTaskTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Provide id of a completed task')
+
+
+class ChangePendingTasksOrderTestCase(TestCase):
+    fixtures = ['user.json', 'pending_tasks.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.pending_tasks = TaskList.objects.filter(user=self.user, is_active=False, is_completed=False)
+        self.pending_task1 = self.pending_tasks[0]
+        self.pending_task2 = self.pending_tasks[1]
+        self.pending_task3 = self.pending_tasks[2]
+
+    def test_change_pending_tasks_order(self):
+        new_order = [{'id': self.pending_task1.pk, 'orderNum': 3},
+                     {'id': self.pending_task2.pk, 'orderNum': 1},
+                     {'id': self.pending_task3.pk, 'orderNum': 2}]
+        data = {'idList': new_order}
+        json_data = json.dumps(data)
+        path = reverse('main_app:change-pending-tasks-order')
+        response = self.client.post(path, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        pending_task1_updated = TaskList.objects.get(pk=self.pending_task1.pk)
+        pending_task2_updated = TaskList.objects.get(pk=self.pending_task2.pk)
+        pending_task3_updated = TaskList.objects.get(pk=self.pending_task3.pk)
+        self.assertEqual(pending_task1_updated.order, 3)
+        self.assertEqual(pending_task2_updated.order, 1)
+        self.assertEqual(pending_task3_updated.order, 2)
