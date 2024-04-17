@@ -625,3 +625,40 @@ class EditCompletedTaskTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
+
+
+class RemoveCompletedTaskTestCase(TestCase):
+    fixtures = ['user.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.client.post(reverse('main_app:add-completed-task'), {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '11:00',
+        })
+        self.completed_task = TaskList.objects.all().first()
+
+    def test_remove_completed_task_success(self):
+        path = reverse('main_app:remove-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertEqual(TaskList.objects.filter(pk=self.completed_task.pk).count(), 0)
+
+    def test_remove_completed_task_with_invalid_id(self):
+        path = reverse('main_app:remove-completed-task', args=[999])
+        response = self.client.post(path)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
+
+    def test_remove_completed_task_with_not_completed_task_provided(self):
+        self.client.post(reverse('main_app:add-pending-task'), {'task_name': 'Pending Task'})
+        pending_task = TaskList.objects.filter(user=self.user, is_active=False, is_completed=False).first()
+        path = reverse('main_app:remove-completed-task', args=[pending_task.pk])
+        response = self.client.post(path)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide id of a completed task')
