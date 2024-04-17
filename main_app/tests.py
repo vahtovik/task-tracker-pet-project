@@ -614,3 +614,14 @@ class EditCompletedTaskTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['message'], 'Provide id of a completed task')
+
+    def test_edit_completed_task_with_invalid_id(self):
+        path = reverse('main_app:edit-completed-task', args=[999])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '11:00',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Task with id 999 does not exist')
