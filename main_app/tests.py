@@ -7,7 +7,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from main_app.models import TaskList
-from main_app.views import add_pending_task
 
 
 class IndexViewTests(TestCase):
@@ -522,3 +521,96 @@ class AddCompletedTaskTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertFalse(response.json()['success'])
         self.assertEqual(response.json()['errors']['__all__'], ['End time must be greater than start time'])
+
+
+class EditCompletedTaskTestCase(TestCase):
+    fixtures = ['user.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.client.post(reverse('main_app:add-completed-task'), {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '11:00',
+        })
+        self.completed_task = TaskList.objects.all().first()
+
+    def test_edit_completed_task_success(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Edited Task',
+            'task_start': '10:00',
+            'task_end': '11:00'
+        })
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertTrue(TaskList.objects.get(pk=self.completed_task.pk).task_name, 'Edited Task')
+
+    def test_edit_completed_task_with_only_one_time_provided(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['__all__'], ['Provide both task start and end time'])
+
+    def test_edit_completed_task_with_empty_task_name(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': '',
+            'task_start': '10:00',
+            'task_end': '11:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['task_name'], ['Обязательное поле.'])
+
+    def test_edit_completed_task_with_wrong_hours(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '25:00',
+            'task_end': '26:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['error'], 'Error in task editing: hour must be in 0..23')
+
+    def test_edit_completed_task_with_wrong_minutes(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:60',
+            'task_end': '11:30',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['error'], 'Error in task editing: minute must be in 0..59')
+
+    def test_edit_completed_task_with_end_time_greater_than_start_time(self):
+        path = reverse('main_app:edit-completed-task', args=[self.completed_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '11:00',
+            'task_end': '10:00',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['errors']['__all__'], ['End time must be greater than start time'])
+
+    def test_edit_completed_task_with_not_completed_task_provided(self):
+        self.client.post(reverse('main_app:add-pending-task'), {'task_name': 'Pending Task'})
+        pending_task = TaskList.objects.filter(user=self.user, is_active=False, is_completed=False).first()
+        path = reverse('main_app:edit-completed-task', args=[pending_task.pk])
+        response = self.client.post(path, {
+            'task_name': 'Test Task',
+            'task_start': '10:00',
+            'task_end': '11:00',
+        })
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide id of a completed task')

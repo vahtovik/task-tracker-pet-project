@@ -267,13 +267,17 @@ def edit_completed_task(request, task_id):
         try:
             task = TaskList.objects.get(pk=task_id)
             if not task.is_completed:
-                return JsonResponse({'success': False, 'message': 'Provide id of a completed task'})
+                return JsonResponse({'success': False, 'message': 'Provide id of a completed task'}, status=400)
             task.task_name = task_name
             task.completed_task_start_time = get_today_date_with_specified_time(task_start_time)
             task.completed_task_end_time = get_today_date_with_specified_time(task_end_time)
             task.save()
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
+        except IntegrityError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Error in task editing: {e}'}, status=400)
 
         # Если у задачи определены время начала и окончания
         if task_start_time and task_end_time:
