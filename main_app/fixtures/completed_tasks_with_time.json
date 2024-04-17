@@ -1,0 +1,32 @@
+[
+  {
+    "model": "main_app.tasklist",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "task_name": "выполненная задача со временем 1",
+      "creation_time": "2024-04-08T16:24:29.540Z",
+      "is_active": false,
+      "is_completed": true,
+      "order": 100000,
+      "active_task_start_time": null,
+      "completed_task_start_time": "2024-04-08T14:00:00Z",
+      "completed_task_end_time": "2024-04-08T15:30:00Z"
+    }
+  },
+  {
+    "model": "main_app.tasklist",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "task_name": "выполненная задача со временем 2",
+      "creation_time": "2024-04-08T20:15:29.937Z",
+      "is_active": false,
+      "is_completed": true,
+      "order": 100000,
+      "active_task_start_time": null,
+      "completed_task_start_time": "2024-04-08T10:00:00Z",
+      "completed_task_end_time": "2024-04-09T11:00:00Z"
+    }
+  }
+]

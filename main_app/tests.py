@@ -691,3 +691,36 @@ class ChangePendingTasksOrderTestCase(TestCase):
         self.assertEqual(pending_task1_updated.order, 3)
         self.assertEqual(pending_task2_updated.order, 1)
         self.assertEqual(pending_task3_updated.order, 2)
+
+
+class LoadNextCompletedTasksTestCase(TestCase):
+    fixtures = ['user.json', 'completed_tasks_with_time.json']
+
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+        self.client.login(username='root', password='root_password')
+        self.completed_tasks_with_time = TaskList.objects.all()
+
+    def test_load_next_completed_tasks_success(self):
+        path = reverse('main_app:load-next-completed-tasks')
+        response = self.client.post(path, data=json.dumps({'date': '17 апреля'}), content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertEqual(response.json()['completed_tasks_with_time'][0]['task_name'],
+                         self.completed_tasks_with_time[0].task_name)
+        self.assertEqual(response.json()['title_date'], '8 апреля, пн')
+
+    def test_load_next_completed_tasks_end_of_tasks(self):
+        path = reverse('main_app:load-next-completed-tasks')
+        self.client.post(path, data=json.dumps({'date': '17 апреля'}), content_type='application/json')
+        response = self.client.post(path, data=json.dumps({'date': '8 апреля'}), content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json()['success'])
+        self.assertTrue(response.json()['is_end_of_tasks'])
+
+    def test_load_next_completed_tasks_without_date(self):
+        path = reverse('main_app:load-next-completed-tasks')
+        response = self.client.post(path, data=json.dumps({'date': ''}), content_type='application/json')
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertFalse(response.json()['success'])
+        self.assertEqual(response.json()['message'], 'Provide date')
