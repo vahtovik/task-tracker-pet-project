@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 
-from django.db import IntegrityError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -237,7 +236,8 @@ def add_completed_task(request):
 
             # Если у задачи определены время начала и окончания
             if task_start_time and task_end_time:
-                task_duration = get_time_difference(new_task.completed_task_start_time, new_task.completed_task_end_time)
+                task_duration = get_time_difference(new_task.completed_task_start_time,
+                                                    new_task.completed_task_end_time)
             else:
                 task_duration = None
 
@@ -248,8 +248,6 @@ def add_completed_task(request):
                 'task_end_time': new_task.completed_task_end_time,
                 'task_duration': task_duration,
             })
-        except IntegrityError as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'error': f'Error in task creating: {e}'}, status=400)
     else:
@@ -274,8 +272,6 @@ def edit_completed_task(request, task_id):
             task.save()
         except TaskList.DoesNotExist:
             return JsonResponse({'success': False, 'message': f'Task with id {task_id} does not exist'}, status=400)
-        except IntegrityError as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'error': f'Error in task editing: {e}'}, status=400)
 
