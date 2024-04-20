@@ -8,6 +8,9 @@ from users.forms import LoginUserForm, RegisterUserForm, ChangeLoginAndPasswordF
 
 
 def register_user(request):
+    if request.user.is_authenticated:
+        return redirect('main_app:index')
+
     if request.method == 'POST':
         form = RegisterUserForm(request.POST)
         if form.is_valid():
@@ -24,6 +27,9 @@ def register_user(request):
 
 
 def login_user(request):
+    if request.user.is_authenticated:
+        return redirect('main_app:index')
+
     if request.method == 'POST':
         form = LoginUserForm(data=request.POST)
         if form.is_valid():

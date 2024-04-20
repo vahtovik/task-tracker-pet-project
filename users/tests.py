@@ -60,6 +60,17 @@ class RegistrationTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, 'Пароли не совпадают')
 
+    def test_get_register_page_when_user_is_already_logged_in(self):
+        self.user = User.objects.create_user(username='test_user', password='test_password')
+        self.client.post(reverse('users:login'), {
+            'username': 'test_user',
+            'password': 'test_password'
+        })
+        path = reverse('users:register')
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, reverse('main_app:index'))
+
 
 class AuthenticationTestCase(TestCase):
     def setUp(self):
@@ -95,6 +106,13 @@ class AuthenticationTestCase(TestCase):
         path = reverse('main_app:index')
         response = self.client.get(path)
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_get_login_page_when_user_is_already_logged_in(self):
+        path = reverse('users:login')
+        self.client.post(path, {'username': 'test_user', 'password': 'test_password'})
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, reverse('main_app:index'))
 
 
 class EditCredentialsTestCase(TestCase):
