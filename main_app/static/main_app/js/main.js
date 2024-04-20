@@ -35,6 +35,12 @@ function addActiveTask() {
             return response.json();
         })
         .then((data) => {
+            // Проверка, что в БД нет активной задачи
+            let success = data.success;
+            if (!success) {
+                return;
+            }
+
             // Проверяем, есть ли в БД активная задача
             let task_already_present = data.task_already_present;
             if (task_already_present) {
