@@ -335,7 +335,8 @@ def load_next_completed_tasks(request):
         # Находим задачу с максимальной предыдущей датой
         target_task = TaskList.objects.filter(
             user=request.user,
-            creation_time__lt=date
+            creation_time__lt=date,
+            is_completed=True
         ).order_by('-creation_time').first()
         if target_task:
             # Получаем дату для следующих задач
