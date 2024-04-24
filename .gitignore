@@ -6,3 +6,7 @@
 # Ignore IDE settings
 .idea/
 .vscode/
+
+# Settings files
+*local_settings.py
+*prod_settings.py
