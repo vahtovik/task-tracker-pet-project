@@ -7,6 +7,9 @@
 .idea/
 .vscode/
 
+* Ignore venv
+*venv
+
 # Settings files
 *dev_settings.py
 *prod_settings.py
