@@ -8,5 +8,5 @@
 .vscode/
 
 # Settings files
-*local_settings.py
+*dev_settings.py
 *prod_settings.py
