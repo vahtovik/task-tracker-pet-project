@@ -11,5 +11,16 @@
 *venv
 
 # Settings files
-*dev_settings.py
 *prod_settings.py
+
+# Env files
+.env
+
+# DB dump
+db_dump.json
+
+# SSL certificates
+ssl_certificates
+
+# nginx.conf
+conf
