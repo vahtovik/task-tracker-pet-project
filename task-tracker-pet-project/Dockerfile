@@ -1,19 +1,11 @@
-FROM ubuntu:latest
-
-RUN apt-get update
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime && apt-get install tzdata -y
-
-RUN apt install -yq python3 python3-pip git
-
-ENV TZ="Europe/Moscow"
-
-RUN git clone https://github.com/vahtovik/ANSARA-test-task.git /app
+FROM python:3.11-alpine
 
 WORKDIR /app
+COPY . /app/
+
 RUN pip install -r requirements.txt
 
-EXPOSE 8000
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD python manage.py migrate \
+    && python manage.py loaddata db_dump.json \
+    && python manage.py collectstatic --noinput \
+    && gunicorn task_tracker.wsgi:application --bind 0.0.0.0:8000
