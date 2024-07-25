@@ -7,7 +7,7 @@
 .idea/
 .vscode/
 
-* Ignore venv
+# Ignore venv
 *venv
 
 # Settings files
